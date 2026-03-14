@@ -49,6 +49,87 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.addEventListener('input', performSearch);
     });
 
+    // --- Supabase Integration ---
+    const fetchExpenses = async () => {
+        const { data, error } = await window.supabaseClient
+            .from('expenses')
+            .select('*')
+            .order('expense_date', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching expenses:', error);
+            return;
+        }
+
+        renderExpenses(data);
+    };
+
+    const renderExpenses = (expenses) => {
+        const section = document.querySelector('.glass-panel:nth-of-type(2)');
+        // Remove existing cards but keep header if any
+        const existingCards = section.querySelectorAll('.expense-card');
+        existingCards.forEach(c => c.remove());
+
+        expenses.forEach(exp => {
+            const card = createExpenseCard(exp);
+            section.appendChild(card);
+        });
+
+        expenseCards = document.querySelectorAll('.expense-card');
+        applyFilter(activeFilter);
+        
+        if (window.lucide) lucide.createIcons();
+    };
+
+    const createExpenseCard = (exp) => {
+        let iconHtml = '';
+        let iconClass = '';
+        const cat = exp.category;
+        
+        if (cat === 'electricity') {
+            iconHtml = '<i data-lucide="zap"></i>';
+            iconClass = 'electricity';
+        } else if (cat === 'cleaning') {
+            iconHtml = '<i data-lucide="sparkles"></i>';
+            iconClass = 'cleaning';
+        } else if (cat === 'maintenance') {
+            iconHtml = '<i data-lucide="wrench"></i>';
+            iconClass = 'maintenance';
+        } else {
+            iconHtml = '<i data-lucide="file-text"></i>';
+            iconClass = 'electricity';
+        }
+
+        const dateObj = new Date(exp.expense_date);
+        const dateStr = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        const div = document.createElement('div');
+        div.className = 'expense-card';
+        div.dataset.category = cat;
+        div.dataset.id = exp.id;
+        
+        div.innerHTML = `
+            <div class="expense-icon ${iconClass}">
+                ${iconHtml}
+            </div>
+            <div class="expense-details">
+                <div class="expense-title">${exp.title}</div>
+                <div class="expense-meta">
+                    <span><i data-lucide="calendar"></i> ${dateStr}</span>
+                    <span><i data-lucide="building"></i> ${exp.provider || 'N/A'}</span>
+                </div>
+            </div>
+            <div class="receipt-badge">
+                <i data-lucide="file-check"></i> Reçu
+            </div>
+            <div class="expense-amount">- ${parseFloat(exp.amount).toFixed(2)} MAD</div>
+            <div class="expense-actions admin-only">
+                <button class="btn-icon-soft"><i data-lucide="more-vertical"></i></button>
+            </div>
+        `;
+        return div;
+    };
+
     // ═══════════════════════════════════════
     //  FILTER BUTTONS FUNCTIONALITY
     // ═══════════════════════════════════════
@@ -59,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const applyFilter = (category) => {
         activeFilter = category;
 
-        // Update active state on ALL filter buttons (both FR and AR)
+        // Update active state
         filterButtons.forEach(btn => {
             if (btn.dataset.filter === category) {
                 btn.classList.add('active');
@@ -116,8 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Handle Save (Mock) ---
-    const handleSave = (e) => {
+    // --- Handle Save to Supabase ---
+    const handleSave = async (e) => {
         e.preventDefault();
 
         // Get values
@@ -127,70 +208,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const amount = document.getElementById('expense-amount').value;
 
         if (!title || !amount) {
-            alert('Veuillez remplir le titre et le montant. / يرجى ملء العنوان والمبلغ.');
+            alert('Veuillez remplir le titre et le montant.');
             return;
         }
 
-        // Get matching icon and class
-        let iconHtml = '';
-        let iconClass = '';
-        if (category === 'electricity') {
-            iconHtml = '<i data-lucide="zap"></i>';
-            iconClass = 'electricity';
-        } else if (category === 'cleaning') {
-            iconHtml = '<i data-lucide="sparkles"></i>';
-            iconClass = 'cleaning';
-        } else if (category === 'maintenance') {
-            iconHtml = '<i data-lucide="wrench"></i>';
-            iconClass = 'maintenance';
-        } else {
-            iconHtml = '<i data-lucide="file-text"></i>';
-            iconClass = 'electricity'; // default styling for diverse
+        const { data, error } = await window.supabaseClient
+            .from('expenses')
+            .insert([{ title, provider, category, amount: parseFloat(amount) }])
+            .select();
+
+        if (error) {
+            alert('Error: ' + error.message);
+            return;
         }
 
-        // Get current date
-        const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-
-        // --- Create New Card ---
         const section = document.querySelector('.glass-panel:nth-of-type(2)');
-        const newCard = document.createElement('div');
-        newCard.className = 'expense-card';
-        newCard.dataset.category = category;
-        
-        newCard.innerHTML = `
-            <div class="expense-icon ${iconClass}">
-                ${iconHtml}
-            </div>
-            <div class="expense-details">
-                <div class="expense-title">${title}</div>
-                <div class="expense-meta">
-                    <span><i data-lucide="calendar"></i> ${dateStr}</span>
-                    <span><i data-lucide="building"></i> ${provider || 'N/A'}</span>
-                </div>
-            </div>
-            <div class="receipt-badge">
-                <i data-lucide="file-plus"></i> Nouveau_Reçu
-            </div>
-            <div class="expense-amount">- ${parseFloat(amount).toFixed(2)} MAD</div>
-            <div class="expense-actions admin-only">
-                <button class="btn-icon-soft"><i data-lucide="more-vertical"></i></button>
-            </div>
-        `;
+        const newCard = createExpenseCard(data[0]);
+        section.insertBefore(newCard, section.firstChild.nextSibling || section.firstChild);
 
-        // Insert at the beginning of the list
-        section.insertBefore(newCard, section.firstChild);
-
-        // Re-init lucide icons for new elements
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-
-        // Update card list and re-apply current filter
+        if (window.lucide) lucide.createIcons();
         expenseCards = document.querySelectorAll('.expense-card');
         applyFilter(activeFilter);
-
         closeModal();
     };
+
+    // Initial fetch
+    fetchExpenses();
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);

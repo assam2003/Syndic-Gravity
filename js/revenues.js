@@ -50,6 +50,91 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.addEventListener('input', performSearch);
     });
 
+    // --- Supabase Integration ---
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1; // 1-12
+
+    const fetchCotisations = async () => {
+        // Fetch residents and their cotisations for current month/year
+        const { data: residents, error: resError } = await window.supabaseClient
+            .from('residents')
+            .select(`
+                id,
+                name,
+                apartment,
+                cotisations (
+                    amount_paid,
+                    is_paid,
+                    payment_date
+                )
+            `)
+            .eq('cotisations.month', currentMonth)
+            .eq('cotisations.year', currentYear);
+
+        if (resError) {
+            console.error('Error:', resError);
+            return;
+        }
+
+        renderRevenues(residents);
+    };
+
+    const renderRevenues = (residents) => {
+        const tbody = document.getElementById('revenues-tbody');
+        tbody.innerHTML = '';
+
+        residents.forEach(res => {
+            const cot = res.cotisations && res.cotisations[0];
+            const isPaid = cot ? cot.is_paid : false;
+            const payDate = cot && cot.payment_date ? new Date(cot.payment_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '';
+
+            const tr = document.createElement('tr');
+            tr.dataset.id = res.id;
+            tr.innerHTML = `
+                <td>
+                    <div class="apt-badge">${res.apartment}</div>
+                </td>
+                <td>
+                    <div class="user-desc">
+                        <strong>${res.name}</strong>
+                    </div>
+                </td>
+                <td>400 MAD</td>
+                <td>
+                    ${isPaid ? `
+                        <span class="badge paid lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé le ${payDate}</span>
+                        <span class="badge paid lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> دُفِع في ${payDate}</span>
+                    ` : `
+                        <span class="badge pending lang-fr">Non payé</span>
+                        <span class="badge pending lang-ar hidden">غير مدفوع</span>
+                    `}
+                </td>
+                <td class="${isPaid ? '' : 'action-cell'} text-right admin-only">
+                    ${isPaid ? `
+                        <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
+                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+                    ` : `
+                        <button class="btn-primary-soft mark-paid-btn lang-fr">Encaisser</button>
+                        <button class="btn-primary-soft mark-paid-btn lang-ar hidden">تحصيل</button>
+                    `}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        tableRows = document.querySelectorAll('#revenues-tbody tr');
+        attachPaymentButtons();
+        
+        // Language sync
+        const currentLang = localStorage.getItem('lang') || 'fr';
+        if (currentLang === 'ar') {
+            tbody.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
+            tbody.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
+        }
+
+        if (window.lucide) lucide.createIcons();
+    };
+
     // Opening Modal
     const openModal = (aptName, row) => {
         if (userRole === 'syndic') {
@@ -77,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
-    attachPaymentButtons();
 
     [btnClose, btnCancel, btnCancelAr].forEach(btn => {
         if (btn) btn.addEventListener('click', closeModal);
@@ -91,51 +175,42 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Save Payment Mock
-    const handleSave = (e) => {
+    // Save Payment to Supabase
+    const handleSave = async (e) => {
         e.preventDefault();
         
         if (!currentRowToUpdate) return;
         
         const amount = inputAmount.value;
+        const residentId = currentRowToUpdate.dataset.id;
+        
         if (!amount || amount <= 0) {
             alert("Montant invalide");
             return;
         }
 
-        // Generate date
-        const dateStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        const { error } = await window.supabaseClient
+            .from('cotisations')
+            .upsert({
+                resident_id: residentId,
+                month: currentMonth,
+                year: currentYear,
+                amount_paid: parseFloat(amount),
+                is_paid: true,
+                payment_date: new Date().toISOString()
+            }, { onConflict: 'resident_id, month, year' });
 
-        // Update the row DOM visually
-        const statusCell = currentRowToUpdate.querySelector('td:nth-child(4)'); // 4th column is Status
-        const actionCell = currentRowToUpdate.querySelector('.action-cell');
-
-        // Swap Status Badge HTML
-        statusCell.innerHTML = `
-            <span class="badge paid lang-fr"><i data-lucide="check" style="width:12px; height:12px; display:inline-block; margin-right:4px;"></i> Payé le ${dateStr}</span>
-            <span class="badge paid lang-ar hidden"><i data-lucide="check" style="width:12px; height:12px; display:inline-block; margin-left:4px;"></i> دُفِع في ${dateStr}</span>
-        `;
-
-        // Change Action button to Check and History
-        actionCell.innerHTML = `
-            <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
-            <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
-        `;
-        actionCell.classList.remove('action-cell');
-
-        // Fix language classes display
-        const currentLang = localStorage.getItem('lang') || 'fr';
-        if (currentLang === 'ar') {
-            statusCell.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
-            statusCell.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
+        if (error) {
+            alert('Error: ' + error.message);
+            return;
         }
 
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-
+        fetchCotisations(); // Refresh list
         closeModal();
     };
+
+    // Initial fetch
+    fetchCotisations();
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);

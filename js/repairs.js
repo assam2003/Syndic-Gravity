@@ -71,6 +71,95 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.addEventListener('input', performSearch);
     });
 
+    // --- Supabase Integration ---
+    const fetchProjects = async () => {
+        const { data, error } = await window.supabaseClient
+            .from('repair_projects')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error:', error);
+            return;
+        }
+
+        renderProjects(data);
+    };
+
+    const renderProjects = (projects) => {
+        const grid = document.querySelector('.projects-grid');
+        grid.innerHTML = '';
+
+        projects.forEach(proj => {
+            const card = createProjectCard(proj);
+            grid.appendChild(card);
+        });
+
+        projectCards = document.querySelectorAll('.repair-card');
+        if (window.lucide) lucide.createIcons();
+
+        // Language sync
+        const currentLang = localStorage.getItem('lang') || 'fr';
+        if (currentLang === 'ar') {
+            grid.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
+            grid.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
+        }
+    };
+
+    const createProjectCard = (proj) => {
+        const budget = parseFloat(proj.budget_total);
+        const collected = parseFloat(proj.budget_collected || 0);
+        const partAmount = (budget / 20).toFixed(2);
+        const budgetFormatted = new Intl.NumberFormat('fr-FR').format(budget);
+        const collectedFormatted = new Intl.NumberFormat('fr-FR').format(collected);
+        const percent = Math.round((collected / budget) * 100) || 0;
+
+        const div = document.createElement('div');
+        div.className = 'repair-card';
+        div.dataset.id = proj.id;
+        div.innerHTML = `
+            <div class="repair-header">
+                <div class="repair-icon">
+                    <i data-lucide="folder"></i>
+                </div>
+                <span class="status ${proj.status === 'Planifié' ? 'pending' : 'active'}">
+                   <span class="lang-fr">${proj.status}</span>
+                </span>
+            </div>
+            <h3 class="repair-title">${proj.title}</h3>
+            <p class="repair-desc">${proj.description || ''}</p>
+            
+            <div class="repair-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Budget Total</span>
+                    <span class="stat-value total">${budgetFormatted} MAD</span>
+                </div>
+                <div class="stat-item" style="align-items: flex-end;">
+                    <span class="stat-label">Fonds Collectés</span>
+                    <span class="stat-value collected">${collectedFormatted} MAD</span>
+                </div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percent}%; background: var(--warning);"></div>
+                </div>
+                <div class="progress-text">
+                    <span>${percent}% collecté</span>
+                    <span>Reste: ${new Intl.NumberFormat('fr-FR').format(budget - collected)} MAD</span>
+                </div>
+            </div>
+
+            <div class="repair-actions">
+                <button class="btn-view" onclick="openDetailView('${proj.title}', '${partAmount}')">
+                    <i data-lucide="eye"></i>
+                    <span>Gérer les Cotisations</span>
+                </button>
+            </div>
+        `;
+        return div;
+    };
+
     // Opening Modal
     const openModal = () => {
         if (userRole === 'syndic') {
@@ -98,8 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Save Project Mock
-    const handleSave = (e) => {
+    // Save Project to Supabase
+    const handleSave = async (e) => {
         e.preventDefault();
         
         const title = document.getElementById('project-title').value;
@@ -111,73 +200,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Calculate part for 20 apartments
-        const partAmount = (budget / 20).toFixed(2);
-        
-        // Format budget
-        const budgetFormatted = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 0 }).format(budget);
+        const { error } = await window.supabaseClient
+            .from('repair_projects')
+            .insert([{ title, description: desc, budget_total: budget, status: 'Planifié' }]);
 
-        // Append new card
-        const grid = document.querySelector('.projects-grid');
-        const newCard = document.createElement('div');
-        newCard.className = 'repair-card';
-        newCard.innerHTML = `
-            <div class="repair-header">
-                <div class="repair-icon">
-                    <i data-lucide="folder-plus"></i>
-                </div>
-                <span class="status pending lang-fr">Nouveau</span>
-                <span class="status pending lang-ar hidden">جديد</span>
-            </div>
-            <h3 class="repair-title">${title}</h3>
-            <p class="repair-desc">${desc}</p>
-            
-            <div class="repair-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Budget Total</span>
-                    <span class="stat-value total">${budgetFormatted} MAD</span>
-                </div>
-                <div class="stat-item" style="align-items: flex-end;">
-                    <span class="stat-label">Fonds Collectés</span>
-                    <span class="stat-value collected">0 MAD</span>
-                </div>
-            </div>
-
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 0%; background: var(--warning);"></div>
-                </div>
-                <div class="progress-text">
-                    <span>0% collecté</span>
-                    <span>Reste: ${budgetFormatted} MAD</span>
-                </div>
-            </div>
-
-            <div class="repair-actions">
-                <button class="btn-view" onclick="openDetailView('${title}', '${partAmount}')">
-                    <i data-lucide="eye"></i>
-                    <span>Gérer les Cotisations</span>
-                </button>
-            </div>
-        `;
-
-        grid.insertBefore(newCard, grid.firstChild);
-
-        // Re-init target search scope and icons
-        projectCards = document.querySelectorAll('.repair-card');
-        if (window.lucide) {
-            lucide.createIcons();
+        if (error) {
+            alert('Error: ' + error.message);
+            return;
         }
 
-        // Apply language visibility based on current setting
-        const currentLang = localStorage.getItem('lang') || 'fr';
-        if (currentLang === 'ar') {
-            newCard.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
-            newCard.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
-        }
-
+        fetchProjects(); // Refresh
         closeModal();
     };
+
+    // Initial fetch
+    fetchProjects();
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);
