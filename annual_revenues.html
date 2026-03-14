@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Bilan Annuel</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .search-year-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .search-year-input {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-panel-solid);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 1rem;
+            width: 200px;
+            outline: none;
+        }
+
+        .search-year-input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-search {
+            padding: 10px 20px;
+            background: var(--gradient-accent);
+            color: white;
+            border-radius: 10px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-search:hover {
+            opacity: 0.9;
+        }
+
+        /* Annual Table overrides to make it horizontal scrolling friendly */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel-solid);
+        }
+
+        .annual-table {
+            width: 100%;
+            min-width: 1000px;
+            border-collapse: collapse;
+        }
+
+        .annual-table th {
+            background: rgba(0,0,0,0.02);
+            padding: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+
+        .annual-table th:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            background: var(--bg-panel-solid);
+            z-index: 10;
+        }
+
+        body[dir="rtl"] .annual-table th:first-child {
+            text-align: right;
+            left: auto;
+            right: 0;
+        }
+
+        .annual-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            background: var(--bg-panel-solid);
+        }
+
+        .annual-table td:first-child {
+            text-align: left;
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            font-weight: 600;
+        }
+
+        body[dir="rtl"] .annual-table td:first-child {
+            text-align: right;
+            left: auto;
+            right: 0;
+        }
+
+        .status-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .status-icon.paid {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-icon.unpaid {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .status-icon.empty {
+            color: var(--border);
+        }
+    </style>
+</head>
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Bilan Annuel des Cotisations</h2>
+                    <h2 class="page-title lang-ar hidden">البيان السنوي للمساهمات</h2>
+                    <p class="page-subtitle lang-fr">Grille annuelle des paiements pour tous les appartements.</p>
+                    <p class="page-subtitle lang-ar hidden">شبكة المدفوعات السنوية لجميع الشقق.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">0</span>
+                    </button>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="dashboard-wrapper">
+                
+                <!-- Search Bar -->
+                <div class="search-year-container">
+                    <input type="text" id="year-input" class="search-year-input lang-fr" placeholder="Année (ex: 2026)" value="2026">
+                    <input type="text" id="year-input-ar" class="search-year-input lang-ar hidden" placeholder="السنة (مثل: 2026)" value="2026">
+                    <button class="btn-search" onclick="loadYearData()">
+                        <i data-lucide="search"></i>
+                        <span class="lang-fr">Afficher</span>
+                        <span class="lang-ar hidden">عرض</span>
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="annual-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <span class="lang-fr">Appartement</span>
+                                    <span class="lang-ar hidden">الشقة</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Jan</span>
+                                    <span class="lang-ar hidden">يناير</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Fév</span>
+                                    <span class="lang-ar hidden">فبراير</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Mars</span>
+                                    <span class="lang-ar hidden">مارس</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Avr</span>
+                                    <span class="lang-ar hidden">أبريل</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Mai</span>
+                                    <span class="lang-ar hidden">مايو</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Juin</span>
+                                    <span class="lang-ar hidden">يونيو</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Juil</span>
+                                    <span class="lang-ar hidden">يوليو</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Août</span>
+                                    <span class="lang-ar hidden">أغسطس</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Sept</span>
+                                    <span class="lang-ar hidden">سبتمبر</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Oct</span>
+                                    <span class="lang-ar hidden">أكتوبر</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Nov</span>
+                                    <span class="lang-ar hidden">نوفمبر</span>
+                                </th>
+                                <th>
+                                    <span class="lang-fr">Déc</span>
+                                    <span class="lang-ar hidden">ديسمبر</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="annual-tbody">
+                            <!-- Rows will be injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Color legend -->
+                <div style="margin-top: 24px; display: flex; gap: 24px; font-size: 0.9rem; color: var(--text-muted);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-icon paid"><i data-lucide="check" style="width: 14px; height: 14px;"></i></span>
+                        <span class="lang-fr">Payé</span><span class="lang-ar hidden">مدفوع</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-icon unpaid"><i data-lucide="x" style="width: 14px; height: 14px;"></i></span>
+                        <span class="lang-fr">Non Payé</span><span class="lang-ar hidden">غير مدفوع</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-icon empty"><i data-lucide="minus" style="width: 14px; height: 14px;"></i></span>
+                        <span class="lang-fr">Aucune donnée</span><span class="lang-ar hidden">لا توجد بيانات</span>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Mock Data for the Annual Table
+        const apartments = [
+            "Apt 01 - Hassan Lahlou",
+            "Apt 02 - Fatima Bennani",
+            "Apt 03 - Karim Idrissi",
+            "Apt 04 - Youssef Naciri",
+            "Apt 05 - Amina El Fassi"
+        ];
+
+        function getRandomStatus(monthIndex) {
+            // For future months in 2026, let's leave them empty
+            if (monthIndex > 2) return 'empty'; // After march
+
+            const rand = Math.random();
+            if (rand > 0.3) return 'paid';
+            return 'unpaid';
+        }
+
+        function loadYearData() {
+            const tbody = document.getElementById('annual-tbody');
+            tbody.innerHTML = ''; // Clear previous
+
+            // Sync search inputs
+            const frInput = document.getElementById('year-input').value;
+            const arInput = document.getElementById('year-input-ar').value;
+            const targetYear = document.activeElement.id === 'year-input-ar' ? arInput : frInput;
+            
+            document.getElementById('year-input').value = targetYear;
+            document.getElementById('year-input-ar').value = targetYear;
+
+            apartments.forEach(apt => {
+                const tr = document.createElement('tr');
+                
+                // Apt Name Column
+                const nameTd = document.createElement('td');
+                // Extract badge vs name
+                const parts = apt.split(' - ');
+                nameTd.innerHTML = `
+                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${parts[0]}</div>
+                    <span style="font-weight: 500;">${parts[1]}</span>
+                `;
+                tr.appendChild(nameTd);
+
+                // Months Columns
+                for (let i = 0; i < 12; i++) {
+                    const td = document.createElement('td');
+                    let status = 'paid';
+                    
+                    if (targetYear === '2026') {
+                        status = getRandomStatus(i);
+                        // Make Mar 2026 unpaid for demo purposes on Apt 02
+                        if (i === 2 && apt.includes('Apt 02')) status = 'unpaid';
+                    } else if (targetYear < '2026') {
+                        status = Math.random() > 0.1 ? 'paid' : 'unpaid'; // mostly paid in past years
+                    } else {
+                        status = 'empty'; // future years
+                    }
+
+                    if (status === 'paid') {
+                        td.innerHTML = '<span class="status-icon paid"><i data-lucide="check" style="width: 14px; height: 14px;"></i></span>';
+                    } else if (status === 'unpaid') {
+                        td.innerHTML = '<span class="status-icon unpaid"><i data-lucide="x" style="width: 14px; height: 14px;"></i></span>';
+                    } else {
+                        td.innerHTML = '<span class="status-icon empty"><i data-lucide="minus" style="width: 14px; height: 14px;"></i></span>';
+                    }
+                    tr.appendChild(td);
+                }
+                
+                tbody.appendChild(tr);
+            });
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadYearData();
+        });
+    </script>
+</body>
+</html>

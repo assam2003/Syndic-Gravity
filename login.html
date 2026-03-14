@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Connexion</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="light-mode login-body" dir="ltr">
+
+    <!-- Language & Theme Toggles Top Right -->
+    <div class="login-controls">
+        <button class="lang-toggle-simple" id="lang-btn-login">
+            <i data-lucide="languages"></i> AR / FR
+        </button>
+        <button class="theme-toggle-simple" id="theme-btn-login">
+            <i data-lucide="moon" class="dark-icon"></i>
+            <i data-lucide="sun" class="light-icon hidden"></i>
+        </button>
+    </div>
+
+    <div class="login-container">
+        <!-- Left Side: Branding -->
+        <div class="login-branding">
+            <div class="branding-content">
+                <div class="logo-large">
+                    <i data-lucide="building-2"></i>
+                </div>
+                <h1 class="brand-title">Syndic <span class="accent-text">Gravity</span></h1>
+                <p class="brand-subtitle lang-fr">La gestion de votre copropriété en toute transparence et simplicité.</p>
+                <p class="brand-subtitle lang-ar hidden">إدارة الممتلكات المشتركة الخاصة بك بشفافية وبساطة.</p>
+                
+                <div class="features-list">
+                    <div class="feature-item">
+                        <i data-lucide="check-circle-2" class="text-success"></i>
+                        <span class="lang-fr">Suivi financier en temps réel</span>
+                        <span class="lang-ar hidden">تتبع مالي في الوقت الحقيقي</span>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="check-circle-2" class="text-success"></i>
+                        <span class="lang-fr">Gestion des résidents & cotisations</span>
+                        <span class="lang-ar hidden">إدارة السكان والمساهمات</span>
+                    </div>
+                    <div class="feature-item">
+                        <i data-lucide="check-circle-2" class="text-success"></i>
+                        <span class="lang-fr">Espace Syndic & Espace Habitant</span>
+                        <span class="lang-ar hidden">مساحة للسنديك ومساحة للساكن</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Abstract shapes for premium feel -->
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+
+        <!-- Right Side: Login Form -->
+        <div class="login-form-wrapper glass-panel">
+            <div class="form-header">
+                <h2 class="form-title lang-fr">Bienvenue</h2>
+                <h2 class="form-title lang-ar hidden">مرحباً بك</h2>
+                <p class="form-subtitle lang-fr">Connectez-vous à votre espace</p>
+                <p class="form-subtitle lang-ar hidden">قم بتسجيل الدخول إلى مساحتك</p>
+            </div>
+
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="email" class="lang-fr">Email Administrateur</label>
+                    <label for="email" class="lang-ar hidden">البريد الإلكتروني للمسؤول</label>
+                    <div class="input-with-icon">
+                        <i data-lucide="mail"></i>
+                        <input type="email" id="email" placeholder="admin@email.com" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="label-row">
+                        <label for="password" class="lang-fr">Mot de passe</label>
+                        <label for="password" class="lang-ar hidden">كلمة المرور</label>
+                        <a href="#" class="forgot-link lang-fr">Oublié ?</a>
+                        <a href="#" class="forgot-link lang-ar hidden">نسيت؟</a>
+                    </div>
+                    <div class="input-with-icon">
+                        <i data-lucide="lock"></i>
+                        <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="toggle-password" id="toggle-password" tabindex="-1">
+                            <i data-lucide="eye" class="eye-show"></i>
+                            <i data-lucide="eye-off" class="eye-hide hidden"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div class="login-error hidden" id="login-error">
+                    <i data-lucide="alert-circle"></i>
+                    <span class="lang-fr">Email ou mot de passe incorrect.</span>
+                    <span class="lang-ar hidden">البريد الإلكتروني أو كلمة المرور غير صحيحة.</span>
+                </div>
+
+                <!-- Success Message -->
+                <div class="login-success hidden" id="login-success">
+                    <i data-lucide="check-circle-2"></i>
+                    <span class="lang-fr">Connexion réussie ! Redirection...</span>
+                    <span class="lang-ar hidden">تم تسجيل الدخول بنجاح! جاري التحويل...</span>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btn-submit">
+                    <span class="btn-text">
+                        <span class="lang-fr">Se connecter</span>
+                        <span class="lang-ar hidden">تسجيل الدخول</span>
+                    </span>
+                    <span class="btn-loading hidden">
+                        <span class="spinner"></span>
+                        <span class="lang-fr">Vérification...</span>
+                        <span class="lang-ar hidden">جاري التحقق...</span>
+                    </span>
+                    <i data-lucide="arrow-right" class="rtl-flip btn-arrow"></i>
+                </button>
+            </form>
+
+            <div class="login-divider">
+                <span class="lang-fr">ou</span>
+                <span class="lang-ar hidden">أو</span>
+            </div>
+
+            <div class="demo-logins">
+                <p class="demo-title lang-fr">Accès Démonstration :</p>
+                <p class="demo-title lang-ar hidden">وضع العرض التوضيحي :</p>
+                <div class="demo-buttons">
+                    <button class="btn-demo syndic" id="demo-syndic">
+                        <i data-lucide="shield"></i>
+                        <span class="lang-fr">Syndic (Admin)</span>
+                        <span class="lang-ar hidden">السنديك (المسؤول)</span>
+                    </button>
+                    <button class="btn-demo resident" id="demo-resident">
+                        <i data-lucide="user"></i>
+                        <span class="lang-fr">Habitant (Lecture)</span>
+                        <span class="lang-ar hidden">الساكن (قراءة فقط)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Logic specifically for login page -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ═══════════════════════════════════════
+            //  ADMIN CREDENTIALS
+            // ═══════════════════════════════════════
+            const ADMIN_EMAIL = 'sadki9@gmail.com';
+            const ADMIN_PASS  = 'abdo123';
+
+            // ═══════════════════════════════════════
+            //  Theme & Language
+            // ═══════════════════════════════════════
+            let isDarkMode = localStorage.getItem('theme') === 'dark';
+            let currentLang = localStorage.getItem('lang') || 'fr';
+            
+            const body = document.body;
+            const darkIcon = document.querySelector('.dark-icon');
+            const lightIcon = document.querySelector('.light-icon');
+            
+            const applyTheme = () => {
+                if(isDarkMode) {
+                    body.classList.add('dark-mode');
+                    darkIcon.classList.add('hidden');
+                    lightIcon.classList.remove('hidden');
+                } else {
+                    body.classList.remove('dark-mode');
+                    darkIcon.classList.remove('hidden');
+                    lightIcon.classList.add('hidden');
+                }
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            };
+
+            const applyLanguage = () => {
+                if (currentLang === 'ar') {
+                    body.setAttribute('dir', 'rtl');
+                    document.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
+                    document.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    body.setAttribute('dir', 'ltr');
+                    document.querySelectorAll('.lang-ar').forEach(el => el.classList.add('hidden'));
+                    document.querySelectorAll('.lang-fr').forEach(el => el.classList.remove('hidden'));
+                }
+                localStorage.setItem('lang', currentLang);
+            };
+
+            document.getElementById('theme-btn-login').addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                applyTheme();
+            });
+
+            document.getElementById('lang-btn-login').addEventListener('click', () => {
+                currentLang = currentLang === 'fr' ? 'ar' : 'fr';
+                applyLanguage();
+            });
+
+            if (!localStorage.getItem('theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                isDarkMode = true;
+            }
+            applyTheme();
+            applyLanguage();
+
+            // ═══════════════════════════════════════
+            //  Toggle Password Visibility
+            // ═══════════════════════════════════════
+            const toggleBtn = document.getElementById('toggle-password');
+            const passwordInput = document.getElementById('password');
+            const eyeShow = document.querySelector('.eye-show');
+            const eyeHide = document.querySelector('.eye-hide');
+
+            toggleBtn.addEventListener('click', () => {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                eyeShow.classList.toggle('hidden');
+                eyeHide.classList.toggle('hidden');
+            });
+
+            // ═══════════════════════════════════════
+            //  LOGIN LOGIC
+            // ═══════════════════════════════════════
+            const loginForm     = document.getElementById('login-form');
+            const emailInput    = document.getElementById('email');
+            const errorBox      = document.getElementById('login-error');
+            const successBox    = document.getElementById('login-success');
+            const submitBtn     = document.getElementById('btn-submit');
+            const btnText       = submitBtn.querySelector('.btn-text');
+            const btnLoading    = submitBtn.querySelector('.btn-loading');
+            const btnArrow      = submitBtn.querySelector('.btn-arrow');
+
+            const showError = () => {
+                errorBox.classList.remove('hidden');
+                successBox.classList.add('hidden');
+                errorBox.classList.add('shake');
+                setTimeout(() => errorBox.classList.remove('shake'), 500);
+                lucide.createIcons({ nodes: [errorBox] });
+            };
+
+            const showSuccess = () => {
+                errorBox.classList.add('hidden');
+                successBox.classList.remove('hidden');
+                lucide.createIcons({ nodes: [successBox] });
+            };
+
+            const setLoading = (loading) => {
+                if (loading) {
+                    btnText.classList.add('hidden');
+                    btnArrow.classList.add('hidden');
+                    btnLoading.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                } else {
+                    btnText.classList.remove('hidden');
+                    btnArrow.classList.remove('hidden');
+                    btnLoading.classList.add('hidden');
+                    submitBtn.disabled = false;
+                }
+            };
+
+            const doLogin = (role, userName) => {
+                localStorage.setItem('userRole', role);
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userName', userName || '');
+                localStorage.setItem('userEmail', emailInput.value || '');
+                window.location.href = 'index.html';
+            };
+
+            // ── Form Submit (Admin Login) ──
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                errorBox.classList.add('hidden');
+                successBox.classList.add('hidden');
+
+                const enteredEmail = emailInput.value.trim().toLowerCase();
+                const enteredPass  = passwordInput.value;
+
+                setLoading(true);
+
+                // Simulate network delay for a premium feel
+                setTimeout(() => {
+                    if (enteredEmail === ADMIN_EMAIL && enteredPass === ADMIN_PASS) {
+                        // ✅ SUCCESS
+                        setLoading(false);
+                        showSuccess();
+                        submitBtn.disabled = true;
+                        setTimeout(() => doLogin('syndic', 'Administrateur'), 1200);
+                    } else {
+                        // ❌ WRONG CREDENTIALS
+                        setLoading(false);
+                        showError();
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                }, 800);
+            });
+
+            // ── Demo Buttons ──
+            document.getElementById('demo-syndic').addEventListener('click', () => doLogin('syndic', 'Syndic Demo'));
+            document.getElementById('demo-resident').addEventListener('click', () => doLogin('resident', 'Habitant Demo'));
+
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

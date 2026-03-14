@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Dépenses</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/residents.css">
+    <style>
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .expense-card {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 12px;
+            gap: 20px;
+            transition: all 0.2s;
+        }
+        
+        .expense-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-soft);
+            border-color: var(--border-solid);
+        }
+        
+        .expense-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .expense-icon.electricity { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .expense-icon.cleaning { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .expense-icon.maintenance { background: rgba(59, 130, 246, 0.1); color: var(--info); }
+        
+        .expense-details {
+            flex: 1;
+        }
+        
+        .expense-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .expense-meta {
+            display: flex;
+            gap: 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .expense-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .expense-amount {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--danger);
+            text-align: right;
+        }
+        body[dir="rtl"] .expense-amount { text-align: left; }
+        
+        .expense-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .receipt-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg-main);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════ */
+        /*  Dropdown Menu                          */
+        /* ═══════════════════════════════════════ */
+        .dropdown-wrapper {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 200px;
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border-solid);
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            padding: 8px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-8px) scale(0.96);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body[dir="rtl"] .dropdown-menu {
+            right: auto;
+            left: 0;
+        }
+
+        .dropdown-menu.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+        }
+
+        body[dir="rtl"] .dropdown-item {
+            text-align: right;
+        }
+
+        .dropdown-item i {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(79, 70, 229, 0.08);
+            color: var(--accent);
+        }
+
+        .dropdown-item:hover i {
+            color: var(--accent);
+        }
+
+        .dropdown-item.danger {
+            color: var(--danger);
+        }
+
+        .dropdown-item.danger i {
+            color: var(--danger);
+        }
+
+        .dropdown-item.danger:hover {
+            background: rgba(239, 68, 68, 0.08);
+            color: var(--danger);
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        /* Confirm Delete Overlay */
+        .confirm-delete-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .confirm-delete-box {
+            background: var(--bg-panel-solid);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .confirm-delete-box .confirm-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .confirm-delete-box .confirm-icon i {
+            color: var(--danger);
+            width: 28px;
+            height: 28px;
+        }
+
+        .confirm-delete-box h3 {
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+
+        .confirm-delete-box p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        .confirm-delete-box .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .confirm-delete-box .btn-cancel-delete {
+            padding: 10px 24px;
+            border-radius: 10px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-solid);
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .confirm-delete-box .btn-cancel-delete:hover {
+            background: var(--border);
+        }
+
+        .confirm-delete-box .btn-confirm-delete {
+            padding: 10px 24px;
+            border-radius: 10px;
+            background: var(--danger);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .confirm-delete-box .btn-confirm-delete:hover {
+            background: #DC2626;
+            transform: translateY(-1px);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Gestion des Dépenses</h2>
+                    <h2 class="page-title lang-ar hidden">إدارة المصاريف</h2>
+                    <p class="page-subtitle lang-fr">Suivez et classez toutes les dépenses de la copropriété.</p>
+                    <p class="page-subtitle lang-ar hidden">تتبع وتصنيف جميع نفقات العمارة.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="dashboard-wrapper">
+                
+                <div class="action-bar glass-panel" style="margin-bottom: 20px;">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="search-input-fr" class="lang-fr" placeholder="Rechercher une dépense (ex: Redal, Nettoyage)">
+                        <input type="text" id="search-input-ar" class="lang-ar hidden" placeholder="البحث في المصاريف (مؤسسة الكهرباء، النظافة)">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary admin-only" id="btn-add-expense">
+                            <i data-lucide="plus"></i>
+                            <span class="lang-fr">Enregistrer une Dépense</span>
+                            <span class="lang-ar hidden">تسجيل مصاريف</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-bar">
+                    <button class="filter-btn active lang-fr" data-filter="all">Toutes</button>
+                    <button class="filter-btn active lang-ar hidden" data-filter="all">الكل</button>
+                    
+                    <button class="filter-btn lang-fr" data-filter="electricity">Électricité & Eau</button>
+                    <button class="filter-btn lang-ar hidden" data-filter="electricity">الماء والكهرباء</button>
+                    
+                    <button class="filter-btn lang-fr" data-filter="cleaning">Nettoyage</button>
+                    <button class="filter-btn lang-ar hidden" data-filter="cleaning">النظافة</button>
+                    
+                    <button class="filter-btn lang-fr" data-filter="maintenance">Maintenance</button>
+                    <button class="filter-btn lang-ar hidden" data-filter="maintenance">الصيانة</button>
+                    
+                    <button class="filter-btn lang-fr" data-filter="diverse">Divers</button>
+                    <button class="filter-btn lang-ar hidden" data-filter="diverse">متنوعات</button>
+                </div>
+
+                <!-- Expenses List -->
+                <section class="glass-panel" style="padding: 24px;">
+                    
+                    <div class="expense-card" data-category="electricity">
+                        <div class="expense-icon electricity">
+                            <i data-lucide="zap"></i>
+                        </div>
+                        <div class="expense-details">
+                            <div class="expense-title lang-fr">Facture Électricité (Ascenseur et Couloirs)</div>
+                            <div class="expense-title lang-ar hidden">فاتورة الكهرباء (المصعد والممرات)</div>
+                            <div class="expense-meta">
+                                <span><i data-lucide="calendar"></i> 05 Mars 2026</span>
+                                <span><i data-lucide="building"></i> Redal</span>
+                            </div>
+                        </div>
+                        <div class="receipt-badge">
+                            <i data-lucide="image"></i> Facture_05-03.pdf
+                        </div>
+                        <div class="expense-amount">- 850 MAD</div>
+                        <div class="expense-actions admin-only">
+                            <div class="dropdown-wrapper">
+                                <button class="btn-icon-soft btn-dropdown-toggle"><i data-lucide="more-vertical"></i></button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item btn-edit-expense"><i data-lucide="pencil"></i><span class="lang-fr">Modifier</span><span class="lang-ar hidden">تعديل</span></button>
+                                    <button class="dropdown-item btn-view-receipt"><i data-lucide="file-text"></i><span class="lang-fr">Voir Facture</span><span class="lang-ar hidden">عرض الفاتورة</span></button>
+                                    <div class="dropdown-divider"></div>
+                                    <button class="dropdown-item btn-delete-expense danger"><i data-lucide="trash-2"></i><span class="lang-fr">Supprimer</span><span class="lang-ar hidden">حذف</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="expense-card" data-category="cleaning">
+                        <div class="expense-icon cleaning">
+                            <i data-lucide="sparkles"></i>
+                        </div>
+                        <div class="expense-details">
+                            <div class="expense-title lang-fr">Frais de Nettoyage Mensuel</div>
+                            <div class="expense-title lang-ar hidden">رسوم النظافة الشهرية</div>
+                            <div class="expense-meta">
+                                <span><i data-lucide="calendar"></i> 02 Mars 2026</span>
+                                <span><i data-lucide="user"></i> Société CleanPro</span>
+                            </div>
+                        </div>
+                        <div class="receipt-badge">
+                            <i data-lucide="paperclip"></i> Reçu_N34.jpg
+                        </div>
+                        <div class="expense-amount">- 1500 MAD</div>
+                        <div class="expense-actions admin-only">
+                            <div class="dropdown-wrapper">
+                                <button class="btn-icon-soft btn-dropdown-toggle"><i data-lucide="more-vertical"></i></button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item btn-edit-expense"><i data-lucide="pencil"></i><span class="lang-fr">Modifier</span><span class="lang-ar hidden">تعديل</span></button>
+                                    <button class="dropdown-item btn-view-receipt"><i data-lucide="file-text"></i><span class="lang-fr">Voir Facture</span><span class="lang-ar hidden">عرض الفاتورة</span></button>
+                                    <div class="dropdown-divider"></div>
+                                    <button class="dropdown-item btn-delete-expense danger"><i data-lucide="trash-2"></i><span class="lang-fr">Supprimer</span><span class="lang-ar hidden">حذف</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="expense-card" data-category="maintenance">
+                        <div class="expense-icon maintenance">
+                            <i data-lucide="wrench"></i>
+                        </div>
+                        <div class="expense-details">
+                            <div class="expense-title lang-fr">Changement Ampoules (Sous-sol)</div>
+                            <div class="expense-title lang-ar hidden">تغيير مصابيح (القبو)</div>
+                            <div class="expense-meta">
+                                <span><i data-lucide="calendar"></i> 28 Fév 2026</span>
+                                <span><i data-lucide="shopping-cart"></i> Bricoma</span>
+                            </div>
+                        </div>
+                        <div class="receipt-badge">
+                            <i data-lucide="paperclip"></i> Ticket_caisse.jpg
+                        </div>
+                        <div class="expense-amount">- 120 MAD</div>
+                        <div class="expense-actions admin-only">
+                            <div class="dropdown-wrapper">
+                                <button class="btn-icon-soft btn-dropdown-toggle"><i data-lucide="more-vertical"></i></button>
+                                <div class="dropdown-menu">
+                                    <button class="dropdown-item btn-edit-expense"><i data-lucide="pencil"></i><span class="lang-fr">Modifier</span><span class="lang-ar hidden">تعديل</span></button>
+                                    <button class="dropdown-item btn-view-receipt"><i data-lucide="file-text"></i><span class="lang-fr">Voir Facture</span><span class="lang-ar hidden">عرض الفاتورة</span></button>
+                                    <div class="dropdown-divider"></div>
+                                    <button class="dropdown-item btn-delete-expense danger"><i data-lucide="trash-2"></i><span class="lang-fr">Supprimer</span><span class="lang-ar hidden">حذف</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Ajouter Dépense -->
+    <div class="modal-overlay" id="modal-add-expense">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title lang-fr">Enregistrer une Dépense</div>
+                <div class="modal-title lang-ar hidden">تسجيل مصاريف</div>
+                <button class="btn-close" id="btn-close-expense"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-expense">
+                    <div class="form-group">
+                        <label class="lang-fr">Titre de la dépense</label>
+                        <label class="lang-ar hidden">عنوان المصروف</label>
+                        <input type="text" id="expense-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Fournisseur / Bénéficiaire</label>
+                        <label class="lang-ar hidden">المورد / المستفيد</label>
+                        <input type="text" id="expense-provider" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Catégorie</label>
+                        <label class="lang-ar hidden">الفئة</label>
+                        <select id="expense-category">
+                            <option value="electricity">Électricité & Eau</option>
+                            <option value="cleaning">Nettoyage</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="diverse">Divers</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Montant (MAD)</label>
+                        <label class="lang-ar hidden">المبلغ (درهم)</label>
+                        <input type="number" id="expense-amount" placeholder="0.00" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary lang-fr" id="btn-cancel-expense">Annuler</button>
+                <button class="btn-secondary lang-ar hidden" id="btn-cancel-expense-ar">إلغاء</button>
+                
+                <button class="btn-primary lang-fr" id="btn-save-expense">Enregistrer</button>
+                <button class="btn-primary lang-ar hidden" id="btn-save-expense-ar">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Dépense -->
+    <div class="modal-overlay" id="modal-edit-expense">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title lang-fr">Modifier la Dépense</div>
+                <div class="modal-title lang-ar hidden">تعديل المصروف</div>
+                <button class="btn-close" id="btn-close-edit-expense"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-expense">
+                    <div class="form-group">
+                        <label class="lang-fr">Titre de la dépense</label>
+                        <label class="lang-ar hidden">عنوان المصروف</label>
+                        <input type="text" id="edit-expense-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Montant (MAD)</label>
+                        <label class="lang-ar hidden">المبلغ (درهم)</label>
+                        <input type="number" id="edit-expense-amount" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Catégorie</label>
+                        <label class="lang-ar hidden">الفئة</label>
+                        <select id="edit-expense-category">
+                            <option value="electricity">Électricité & Eau</option>
+                            <option value="cleaning">Nettoyage</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="diverse">Divers</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btn-cancel-edit-expense"><span class="lang-fr">Annuler</span><span class="lang-ar hidden">إلغاء</span></button>
+                <button class="btn-primary" id="btn-save-edit-expense"><span class="lang-fr">Enregistrer</span><span class="lang-ar hidden">حفظ</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/expenses.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

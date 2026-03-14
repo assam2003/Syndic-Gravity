@@ -1,0 +1,147 @@
+:root {
+    /* Fonts */
+    --font-primary: 'Inter', sans-serif;
+    --font-ar: 'Tajawal', sans-serif;
+    
+    /* Brand Colors */
+    --accent: #4F46E5; /* Premium Indigo */
+    --accent-light: #6366F1;
+    --accent-hover: #4338CA;
+    
+    /* Status Colors */
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    
+    /* Light Theme (Default) */
+    --bg-main: #F3F4F6;
+    --bg-glass: rgba(255, 255, 255, 0.65);
+    --bg-panel-solid: #ffffff;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border: rgba(229, 231, 235, 0.5);
+    --border-solid: #E5E7EB;
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    
+    /* Gradients */
+    --gradient-1: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 100%);
+    --gradient-accent: linear-gradient(135deg, #4F46E5 0%, #8B5CF6 100%);
+    --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+    --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    --gradient-danger: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
+}
+
+.dark-mode {
+    --bg-main: #111827;
+    --bg-glass: rgba(31, 41, 55, 0.65);
+    --bg-panel-solid: #1F2937;
+    --text-main: #F9FAFB;
+    --text-muted: #9CA3AF;
+    --border: rgba(55, 65, 81, 0.5);
+    --border-solid: #374151;
+    
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --gradient-1: linear-gradient(135deg, rgba(31,41,55,0.9) 0%, rgba(31,41,55,0.4) 100%);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
+
+body[dir="rtl"] {
+    font-family: var(--font-ar), var(--font-primary);
+}
+
+/* Typography Basics */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text-main);
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: var(--shadow-glass);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+}
+
+/* Buttons */
+button {
+    cursor: pointer;
+    font-family: inherit;
+    border: none;
+    background: none;
+    outline: none;
+}
+
+.btn-secondary {
+    padding: 6px 12px;
+    background-color: var(--bg-panel-solid);
+    border: 1px solid var(--border-solid);
+    color: var(--text-main);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: var(--border);
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent);
+    color: white;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.btn-icon:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Utility classes */
+.hidden { display: none !important; }
+.text-success { color: var(--success) !important; font-weight: 600; }
+.text-danger { color: var(--danger) !important; font-weight: 600; }
+.text-right { text-align: right; }
+.text-sm { font-size: 0.875rem; color: var(--text-muted); }

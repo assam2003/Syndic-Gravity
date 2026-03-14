@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Propriétaires</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/residents.css">
+</head>
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Gestion des Propriétaires</h2>
+                    <h2 class="page-title lang-ar hidden">إدارة الملاك</h2>
+                    <p class="page-subtitle lang-fr">Consultez et gérez la liste des résidents et propriétaires.</p>
+                    <p class="page-subtitle lang-ar hidden">عرض وإدارة قائمة السكان والملاك.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="dashboard-wrapper">
+                
+                <!-- Action Bar -->
+                <div class="action-bar glass-panel">
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="search-input-fr" class="lang-fr" placeholder="Rechercher par nom, appartement...">
+                        <input type="text" id="search-input-ar" class="lang-ar hidden" placeholder="البحث بالاسم، الشقة...">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-primary admin-only" id="btn-add-resident">
+                            <i data-lucide="user-plus"></i>
+                            <span class="lang-fr">Nouveau Propriétaire</span>
+                            <span class="lang-ar hidden">مالك جديد</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <section class="glass-panel main-table-section">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <span class="lang-fr">Appartement</span>
+                                        <span class="lang-ar hidden">الشقة</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Propriétaire</span>
+                                        <span class="lang-ar hidden">المالك</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Contact</span>
+                                        <span class="lang-ar hidden">جهة الاتصال</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Statut</span>
+                                        <span class="lang-ar hidden">الحالة</span>
+                                    </th>
+                                    <th class="text-right admin-only">
+                                        <span class="lang-fr">Actions</span>
+                                        <span class="lang-ar hidden">إجراءات</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="apt-badge">Apt 01</div>
+                                        <span class="text-sm">RDC</span>
+                                    </td>
+                                    <td>
+                                        <div class="user-desc">
+                                            <strong>Hassan Lahlou</strong>
+                                            <span class="text-sm">Propriétaire Résident</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info">
+                                            <span><i data-lucide="phone" class="icon-sm"></i> 06 61 23 45 67</span>
+                                            <span><i data-lucide="mail" class="icon-sm"></i> h.lahlou@email.com</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status active lang-fr">À jour</span>
+                                        <span class="status active lang-ar hidden">مُحدَّث</span>
+                                    </td>
+                                    <td class="text-right admin-only">
+                                        <button class="btn-icon-soft btn-edit-resident" title="Modifier" data-index="0"><i data-lucide="edit"></i></button>
+                                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="apt-badge">Apt 02</div>
+                                        <span class="text-sm">RDC</span>
+                                    </td>
+                                    <td>
+                                        <div class="user-desc">
+                                            <strong>Fatima Bennani</strong>
+                                            <span class="text-sm">Propriétaire Non-Résident</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info">
+                                            <span><i data-lucide="phone" class="icon-sm"></i> 06 62 34 56 78</span>
+                                            <span><i data-lucide="mail" class="icon-sm"></i> f.bennani@email.com</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status pending lang-fr">Retard (1 mois)</span>
+                                        <span class="status pending lang-ar hidden">تأخير (شهر واحد)</span>
+                                    </td>
+                                    <td class="text-right admin-only">
+                                        <button class="btn-icon-soft btn-edit-resident" title="Modifier" data-index="1"><i data-lucide="edit"></i></button>
+                                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="apt-badge">Apt 03</div>
+                                        <span class="text-sm">1er Étage</span>
+                                    </td>
+                                    <td>
+                                        <div class="user-desc">
+                                            <strong>Karim Idrissi</strong>
+                                            <span class="text-sm">Locataire</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="contact-info">
+                                            <span><i data-lucide="phone" class="icon-sm"></i> 06 63 45 67 89</span>
+                                            <span class="text-sm">Prop: Youssef Rami</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status active lang-fr">À jour</span>
+                                        <span class="status active lang-ar hidden">مُحدَّث</span>
+                                    </td>
+                                    <td class="text-right admin-only">
+                                        <button class="btn-icon-soft btn-edit-resident" title="Modifier" data-index="2"><i data-lucide="edit"></i></button>
+                                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Ajouter Propriétaire -->
+    <div class="modal-overlay" id="modal-add-resident">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title lang-fr">Nouveau Propriétaire</div>
+                <div class="modal-title lang-ar hidden">مالك جديد</div>
+                <button class="btn-close" id="btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-resident">
+                    <div class="form-group">
+                        <label class="lang-fr">Nom Complet</label>
+                        <label class="lang-ar hidden">الاسم الكامل</label>
+                        <input type="text" id="input-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Appartement</label>
+                        <label class="lang-ar hidden">الشقة</label>
+                        <input type="text" id="input-apt" placeholder="Ex: Apt 04" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Contact (Téléphone)</label>
+                        <label class="lang-ar hidden">رقم الهاتف</label>
+                        <input type="text" id="input-phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Type Résident</label>
+                        <label class="lang-ar hidden">نوع الساكن</label>
+                        <select id="input-type">
+                            <option value="Propriétaire Résident">Propriétaire Résident</option>
+                            <option value="Propriétaire Non-Résident">Propriétaire Non-Résident</option>
+                            <option value="Locataire">Locataire</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary lang-fr" id="btn-cancel-modal">Annuler</button>
+                <button class="btn-secondary lang-ar hidden" id="btn-cancel-modal-ar">إلغاء</button>
+                
+                <button class="btn-primary lang-fr" id="btn-save-resident">Enregistrer</button>
+                <button class="btn-primary lang-ar hidden" id="btn-save-resident-ar">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Propriétaire -->
+    <div class="modal-overlay" id="modal-edit-resident">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title lang-fr">Modifier Propriétaire</div>
+                <div class="modal-title lang-ar hidden">تعديل المالك</div>
+                <button class="btn-close" id="btn-close-edit-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-resident">
+                    <input type="hidden" id="edit-index">
+                    <div class="form-group">
+                        <label class="lang-fr">Nom Complet</label>
+                        <label class="lang-ar hidden">الاسم الكامل</label>
+                        <input type="text" id="edit-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Appartement</label>
+                        <label class="lang-ar hidden">الشقة</label>
+                        <input type="text" id="edit-apt" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Contact (Téléphone)</label>
+                        <label class="lang-ar hidden">رقم الهاتف</label>
+                        <input type="text" id="edit-phone">
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Type Résident</label>
+                        <label class="lang-ar hidden">نوع الساكن</label>
+                        <select id="edit-type">
+                            <option value="Propriétaire Résident">Propriétaire Résident</option>
+                            <option value="Propriétaire Non-Résident">Propriétaire Non-Résident</option>
+                            <option value="Locataire">Locataire</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btn-cancel-edit"><span class="lang-fr">Annuler</span><span class="lang-ar hidden">إلغاء</span></button>
+                <button class="btn-primary" id="btn-save-edit"><span class="lang-fr">Enregistrer</span><span class="lang-ar hidden">حفظ</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script src="js/residents.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

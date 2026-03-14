@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Tableau de bord</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item active">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Vue d'ensemble</h2>
+                    <h2 class="page-title lang-ar hidden">نظرة عامة</h2>
+                    <p class="page-subtitle">Résidence Les Oliviers • Mars 2026</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">3</span>
+                    </button>
+                    
+                    <div class="user-profile">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-wrapper">
+                
+                <!-- Quick Metric Cards -->
+                <section class="metrics-grid">
+                    <div class="metric-card glass-panel gradient-1">
+                        <div class="metric-icon">
+                            <i data-lucide="wallet"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr">Solde Actuel</h3>
+                            <h3 class="lang-ar hidden">الرصيد الحالي</h3>
+                            <div class="metric-value">45 200 <span class="currency">MAD</span></div>
+                            <div class="metric-trend positive">
+                                <i data-lucide="trending-up"></i> +12.5% vs mois dernier
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card glass-panel">
+                        <div class="metric-icon income">
+                            <i data-lucide="arrow-down-left"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr">Revenus (Ce mois)</h3>
+                            <h3 class="lang-ar hidden">الدخل (هذا الشهر)</h3>
+                            <div class="metric-value">12 400 <span class="currency">MAD</span></div>
+                            <div class="progress-bar-container">
+                                <div class="progress-info">
+                                    <span>Taux de recouvrement</span>
+                                    <span>85%</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card glass-panel">
+                        <div class="metric-icon expense">
+                            <i data-lucide="arrow-up-right"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr">Dépenses (Ce mois)</h3>
+                            <h3 class="lang-ar hidden">المصاريف (هذا الشهر)</h3>
+                            <div class="metric-value">3 800 <span class="currency">MAD</span></div>
+                            <div class="alert-text subtle">Nettoyage, Électricité commune</div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card glass-panel warning">
+                        <div class="metric-icon alert">
+                            <i data-lucide="alert-circle"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr">Retards de Paiement</h3>
+                            <h3 class="lang-ar hidden">تأخر في الدفع</h3>
+                            <div class="metric-value">4 <span class="text-sm">Appartements</span></div>
+                            <button class="action-link lang-fr admin-only">Envoyer rappels <i data-lucide="arrow-right"></i></button>
+                            <button class="action-link lang-ar hidden admin-only">إرسال تذكير <i data-lucide="arrow-left"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="dashboard-row">
+                    <!-- Recent Transactions Table -->
+                    <section class="recent-transactions glass-panel flex-2">
+                        <div class="section-header">
+                            <h3 class="lang-fr">Dernières Opérations</h3>
+                            <h3 class="lang-ar hidden">أحدث العمليات</h3>
+                            <button class="btn-secondary lang-fr">Voir tout</button>
+                            <button class="btn-secondary lang-ar hidden">عرض الكل</button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <span class="lang-fr">Date</span>
+                                            <span class="lang-ar hidden">التاريخ</span>
+                                        </th>
+                                        <th>
+                                            <span class="lang-fr">Description</span>
+                                            <span class="lang-ar hidden">الوصف</span>
+                                        </th>
+                                        <th>
+                                            <span class="lang-fr">Appartement</span>
+                                            <span class="lang-ar hidden">الشقة</span>
+                                        </th>
+                                        <th class="text-right">
+                                            <span class="lang-fr">Montant</span>
+                                            <span class="lang-ar hidden">المبلغ</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>10 Mars 2026</td>
+                                        <td>
+                                            <div class="tx-desc">
+                                                <div class="tx-icon add"><i data-lucide="plus"></i></div>
+                                                <span>Cotisation Mensuelle</span>
+                                            </div>
+                                        </td>
+                                        <td>Apt 12 - M. Alaoui</td>
+                                        <td class="text-right text-success">+ 400 MAD</td>
+                                    </tr>
+                                    <tr>
+                                        <td>8 Mars 2026</td>
+                                        <td>
+                                            <div class="tx-desc">
+                                                <div class="tx-icon add"><i data-lucide="plus"></i></div>
+                                                <span>Fonds Réparation Ascenseur</span>
+                                            </div>
+                                        </td>
+                                        <td>Apt 05 - Mme. Bennani</td>
+                                        <td class="text-right text-success">+ 1000 MAD</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5 Mars 2026</td>
+                                        <td>
+                                            <div class="tx-desc">
+                                                <div class="tx-icon sub"><i data-lucide="minus"></i></div>
+                                                <span>Facture Électricité (Redal)</span>
+                                            </div>
+                                        </td>
+                                        <td>-</td>
+                                        <td class="text-right text-danger">- 850 MAD</td>
+                                    </tr>
+                                    <tr>
+                                        <td>2 Mars 2026</td>
+                                        <td>
+                                            <div class="tx-desc">
+                                                <div class="tx-icon sub"><i data-lucide="minus"></i></div>
+                                                <span>Société de Nettoyage</span>
+                                            </div>
+                                        </td>
+                                        <td>-</td>
+                                        <td class="text-right text-danger">- 1500 MAD</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                    <!-- Active Projects/Repairs -->
+                    <section class="active-projects glass-panel flex-1">
+                        <div class="section-header">
+                            <h3 class="lang-fr">Fonds de Réparation</h3>
+                            <h3 class="lang-ar hidden">صناديق الإصلاح</h3>
+                            <button class="btn-icon admin-only"><i data-lucide="plus"></i></button>
+                        </div>
+                        
+                        <div class="projects-list">
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h4 class="lang-fr">Réparation Ascenseur</h4>
+                                    <h4 class="lang-ar hidden">إصلاح المصعد</h4>
+                                    <span class="status active">En cours</span>
+                                </div>
+                                <div class="project-stats">
+                                    <div class="stat">
+                                        <span class="label">Collecté</span>
+                                        <span class="val">8,000 MAD</span>
+                                    </div>
+                                    <div class="stat right">
+                                        <span class="label">Objectif</span>
+                                        <span class="val">10,000 MAD</span>
+                                    </div>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill gradient-2" style="width: 80%"></div>
+                                </div>
+                            </div>
+
+                            <div class="project-card">
+                                <div class="project-header">
+                                    <h4 class="lang-fr">Peinture Façade</h4>
+                                    <h4 class="lang-ar hidden">صباغة الواجهة</h4>
+                                    <span class="status pending">Planifié</span>
+                                </div>
+                                <div class="project-stats">
+                                    <div class="stat">
+                                        <span class="label">Collecté</span>
+                                        <span class="val">2,500 MAD</span>
+                                    </div>
+                                    <div class="stat right">
+                                        <span class="label">Objectif</span>
+                                        <span class="val">25,000 MAD</span>
+                                    </div>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill gradient-3" style="width: 10%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

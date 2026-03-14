@@ -1,0 +1,12 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Potential build or dependency files
+node_modules/
+dist/
+build/
