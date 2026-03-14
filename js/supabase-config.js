@@ -7,3 +7,4 @@ const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // Export for use in other files
 window.supabaseClient = _supabase;
+window.supabase = _supabase; // Adding alias for flexibility

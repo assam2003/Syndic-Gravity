@@ -279,32 +279,44 @@
             };
 
             // ── Form Submit (Admin Login) ──
-            loginForm.addEventListener('submit', (e) => {
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 errorBox.classList.add('hidden');
                 successBox.classList.add('hidden');
 
-                const enteredEmail = emailInput.value.trim().toLowerCase();
+                const enteredEmail = emailInput.value.trim();
                 const enteredPass  = passwordInput.value;
 
                 setLoading(true);
 
-                // Simulate network delay for a premium feel
-                setTimeout(() => {
-                    if (enteredEmail === ADMIN_EMAIL && enteredPass === ADMIN_PASS) {
-                        // ✅ SUCCESS
-                        setLoading(false);
-                        showSuccess();
-                        submitBtn.disabled = true;
-                        setTimeout(() => doLogin('syndic', 'Administrateur'), 1200);
-                    } else {
-                        // ❌ WRONG CREDENTIALS
-                        setLoading(false);
-                        showError();
-                        passwordInput.value = '';
-                        passwordInput.focus();
-                    }
-                }, 800);
+                // --- REAL AUTH with Supabase ---
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: enteredEmail,
+                    password: enteredPass,
+                });
+
+                setLoading(false);
+
+                if (error) {
+                    // ❌ AUTH FAILED
+                    showError();
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                    console.error('Auth error:', error.message);
+                } else {
+                    // ✅ SUCCESS
+                    showSuccess();
+                    submitBtn.disabled = true;
+                    
+                    // Store local flags for UI logic
+                    localStorage.setItem('userRole', 'syndic');
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userName', data.user.email.split('@')[0]);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1200);
+                }
             });
 
             // ── Demo Buttons ──

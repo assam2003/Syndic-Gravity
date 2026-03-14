@@ -1,14 +1,16 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-    // --- Auth Check ---
+    // --- REAL Auth Check (Supabase) ---
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    
+    if (!session && !window.location.pathname.includes('login.html')) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // --- Legacy Local Storage state (for UI role switching) ---
     const isLoggedIn = localStorage.getItem('isLoggedIn');
     const userRole = localStorage.getItem('userRole') || 'resident'; // 'syndic' ou 'resident'
-
-    // Redirect to login if not logged in (and we are not already on login page)
-    if (isLoggedIn !== 'true' && !window.location.pathname.includes('login.html')) {
-        window.location.href = 'login.html';
-        return; // Stop execution
-    }
 
     // --- State ---
     let isDarkMode = localStorage.getItem('theme') === 'dark';
@@ -95,16 +97,33 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme();
     applyLanguage();
 
-    // Logic for User Profile dropdown / Logout (Simulated action)
-    const userProfileMenu = document.querySelector('.user-profile');
+    // --- Logout Logic ---
+    const userProfileMenu = document.getElementById('user-profile-menu');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    const handleLogout = async (e) => {
+        if (e) e.preventDefault();
+        
+        const confirmMsg = currentLang === 'fr' ? 'Voulez-vous vous déconnecter ?' : 'هل تريد تسجيل الخروج؟';
+        if (!confirm(confirmMsg)) return;
+
+        // Sign out from Supabase
+        await window.supabaseClient.auth.signOut();
+        
+        // Clear local storage
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userName');
+        
+        window.location.href = 'login.html';
+    };
+
     if (userProfileMenu) {
         userProfileMenu.style.cursor = 'pointer';
-        userProfileMenu.addEventListener('click', () => {
-            if (confirm(currentLang === 'fr' ? 'Voulez-vous vous déconnecter ?' : 'هل تريد تسجيل الخروج؟')) {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userRole');
-                window.location.href = 'login.html';
-            }
-        });
+        userProfileMenu.addEventListener('click', handleLogout);
     }
-});
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
+}); // End of DOMContentLoaded
