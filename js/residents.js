@@ -58,6 +58,67 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.addEventListener('input', performSearch);
     });
 
+    // --- Supabase Integration Functions ---
+    const fetchResidents = async () => {
+        const { data, error } = await window.supabaseClient
+            .from('residents')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching residents:', error);
+            return;
+        }
+
+        renderResidents(data);
+    };
+
+    const renderResidents = (residents) => {
+        const tbody = document.querySelector('.data-table tbody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        residents.forEach(res => {
+            const row = createResidentRow(res);
+            tbody.appendChild(row);
+        });
+
+        tableRows = document.querySelectorAll('.data-table tbody tr');
+        attachEditListeners();
+        
+        // Re-init lucide
+        if (window.lucide) lucide.createIcons();
+    };
+
+    const createResidentRow = (res) => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = res.id; // Store Supabase ID
+        tr.innerHTML = `
+            <td>
+                <div class="apt-badge">${res.apartment}</div>
+                <span class="text-sm">${res.floor || ''}</span>
+            </td>
+            <td>
+                <div class="user-desc">
+                    <strong>${res.name}</strong>
+                    <span class="text-sm">${res.type}</span>
+                </div>
+            </td>
+            <td>
+                <div class="contact-info">
+                    <span><i data-lucide="phone" class="icon-sm"></i> ${res.phone || '-'}</span>
+                </div>
+            </td>
+            <td>
+                <span class="status active lang-fr">À jour</span>
+                <span class="status active lang-ar hidden">مُحدَّث</span>
+            </td>
+            <td class="text-right admin-only">
+                <button class="btn-icon-soft btn-edit-resident" title="Modifier"><i data-lucide="edit"></i></button>
+                <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+            </td>
+        `;
+        return tr;
+    };
 
     // --- Add Modal functionality ---
     const openModal = () => {
@@ -88,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Handle Save (Add New) ---
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
 
         // Get values
@@ -102,44 +163,28 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- Create New Row ---
-        const tbody = document.querySelector('.data-table tbody');
-        const newRow = document.createElement('tr');
-        
-        newRow.innerHTML = `
-            <td>
-                <div class="apt-badge">${apt}</div>
-                <span class="text-sm">Nouveau</span>
-            </td>
-            <td>
-                <div class="user-desc">
-                    <strong>${name}</strong>
-                    <span class="text-sm">${type}</span>
-                </div>
-            </td>
-            <td>
-                <div class="contact-info">
-                    <span><i data-lucide="phone" class="icon-sm"></i> ${phone || '-'}</span>
-                </div>
-            </td>
-            <td>
-                <span class="status active lang-fr">À jour</span>
-                <span class="status active lang-ar hidden">مُحدَّث</span>
-            </td>
-            <td class="text-right admin-only">
-                <button class="btn-icon-soft btn-edit-resident" title="Modifier"><i data-lucide="edit"></i></button>
-                <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
-            </td>
-        `;
+        // --- Save to Supabase ---
+        const { data, error } = await window.supabaseClient
+            .from('residents')
+            .insert([
+                { name, apartment: apt, phone, type, status: 'À jour' }
+            ])
+            .select();
 
+        if (error) {
+            alert('Error saving to Supabase: ' + error.message);
+            return;
+        }
+
+        // --- Update UI ---
+        const tbody = document.querySelector('.data-table tbody');
+        const newRow = createResidentRow(data[0]);
         tbody.insertBefore(newRow, tbody.firstChild);
 
-        // Re-init lucide icons for new elements
-        if (window.lucide) {
-            lucide.createIcons();
-        }
+        // Re-init lucide icons
+        if (window.lucide) lucide.createIcons();
         
-        // Ensure new elements follow current language and role
+        // Language sync
         const currentLang = localStorage.getItem('lang') || 'fr';
         if (currentLang === 'ar') {
             newRow.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
@@ -147,12 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         tableRows = document.querySelectorAll('.data-table tbody tr');
-
-        // Attach edit listener to new row's edit button
         attachEditListeners();
-
         closeModal();
     };
+
+    // Fetch initial data
+    fetchResidents();
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);
@@ -218,9 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
         editingRow = null;
     };
 
-    const handleEditSave = () => {
+    const handleEditSave = async () => {
         if (!editingRow) return;
 
+        const id = editingRow.dataset.id;
         const newName = document.getElementById('edit-name').value.trim();
         const newApt = document.getElementById('edit-apt').value.trim();
         const newPhone = document.getElementById('edit-phone').value.trim();
@@ -228,6 +274,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!newName || !newApt) {
             alert('Veuillez remplir le nom et l\'appartement. / يرجى ملء الاسم والشقة.');
+            return;
+        }
+
+        // --- Update Supabase ---
+        const { error } = await window.supabaseClient
+            .from('residents')
+            .update({ name: newName, apartment: newApt, phone: newPhone, type: newType })
+            .eq('id', id);
+
+        if (error) {
+            alert('Error updating Supabase: ' + error.message);
             return;
         }
 
@@ -248,16 +305,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Add a brief highlight animation to show the row was updated
+        // Add a brief highlight animation
         editingRow.style.transition = 'background 0.5s ease';
         editingRow.style.background = 'rgba(79, 70, 229, 0.15)';
         setTimeout(() => {
             editingRow.style.background = '';
         }, 1500);
 
-        // Re-init lucide icons
         if (window.lucide) lucide.createIcons();
-
         closeEditModal();
     };
 
