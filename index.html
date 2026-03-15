@@ -332,12 +332,8 @@
                 <p class="lang-ar hidden" style="margin-bottom: 20px; color: var(--text-muted);">كم عدد الشقق أو الوحدات في المبنى الخاص بك؟</p>
                 <form id="form-setup-units">
                     <div class="form-group">
-                        <input type="number" id="input-units-count" min="1" max="1000" required placeholder="Ex: 24" style="text-align: center; font-size: 1.2rem; padding: 12px; border: 2px solid var(--border); border-radius: 12px;">
+                        <input type="number" id="input-units-count" min="1" max="1000" required placeholder="Ex: 24 (Appuyez sur Entrée)" style="text-align: center; font-size: 1.2rem; padding: 12px; border: 2px solid var(--border); border-radius: 12px; width: 100%;">
                     </div>
-                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px;">
-                        <span class="lang-fr">Générer les <span id="units-placeholder">...</span> unités</span>
-                        <span class="lang-ar hidden">إنشاء <span id="units-placeholder-ar">...</span> وحدات</span>
-                    </button>
                     <div id="setup-loading" style="display: none; margin-top: 15px; color: var(--accent);">
                         <span class="lang-fr">Création en cours, veuillez patienter...</span>
                         <span class="lang-ar hidden">جارٍ الإنشاء، يرجى الانتظار...</span>

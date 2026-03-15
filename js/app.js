@@ -157,10 +157,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const count = parseInt(document.getElementById('input-units-count').value, 10);
                 if (!count || count <= 0) return;
 
-                const submitBtn = setupForm.querySelector('button[type="submit"]');
+                const inputEl = document.getElementById('input-units-count');
                 const loadingMsg = document.getElementById('setup-loading');
                 
-                submitBtn.disabled = true;
+                inputEl.disabled = true;
                 loadingMsg.style.display = 'block';
 
                 try {
@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('Error generating units:', err);
                     alert('Erreur: ' + err.message);
                 } finally {
-                    submitBtn.disabled = false;
+                    inputEl.disabled = false;
                     loadingMsg.style.display = 'none';
                 }
             });
