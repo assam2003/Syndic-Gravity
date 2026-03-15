@@ -453,9 +453,28 @@
                 </div>
 
                 <!-- Expenses List -->
-                <section class="glass-panel" style="padding: 24px;">
-                    <!-- Data will be populated via Supabase -->
-                </section>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="lang-fr">Date</th>
+                                <th class="lang-ar hidden">التاريخ</th>
+                                <th class="lang-fr">Description</th>
+                                <th class="lang-ar hidden">الوصف</th>
+                                <th class="lang-fr">Fournisseur</th>
+                                <th class="lang-ar hidden">المورد</th>
+                                <th class="lang-fr">Catégorie</th>
+                                <th class="lang-ar hidden">الفئة</th>
+                                <th class="lang-fr">Montant</th>
+                                <th class="lang-ar hidden">المبلغ</th>
+                                <th class="admin-only"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenses-tbody">
+                            <!-- Data will be populated via Supabase -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>

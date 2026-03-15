@@ -267,7 +267,7 @@
                 </div>
 
                 <div class="table-container">
-                    <table class="annual-table">
+                    <table class="data-table">
                         <thead>
                             <tr>
                                 <th>
@@ -356,17 +356,11 @@
     <script>
         async function loadYearData() {
             const tbody = document.getElementById('annual-tbody');
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding: 20px;">Chargement...</td></tr>'; // Loading state
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding: 20px; color: #8A8D9F;">Chargement...</td></tr>';
 
-            // Sync search inputs
             const frInput = document.getElementById('year-input').value;
-            const arInput = document.getElementById('year-input-ar').value;
-            const targetYear = document.activeElement.id === 'year-input-ar' ? arInput : frInput;
-            
-            document.getElementById('year-input').value = targetYear;
-            document.getElementById('year-input-ar').value = targetYear;
+            const targetYear = frInput || "2026";
 
-            // Fetch units and their payments for the target year
             const { data: unitsData, error } = await window.supabaseClient
                 .from('units')
                 .select(`
@@ -379,65 +373,48 @@
 
             if (error) {
                 console.error("Erreur de chargement:", error.message);
-                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color: var(--danger);">${error.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color: #e74c3c;">${error.message}</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = ''; // Clear loading
-
-            if (!unitsData || unitsData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;">Aucune donnée trouvée / لا توجد بيانات</td></tr>';
-                return;
-            }
+            tbody.innerHTML = '';
 
             unitsData.forEach(res => {
                 const tr = document.createElement('tr');
                 
-                // Apt Name Column
                 const nameTd = document.createElement('td');
+                nameTd.className = 'sticky-col';
                 nameTd.innerHTML = `
-                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${res.apartment || '-'}</div>
-                    <span style="font-weight: 500;">${res.resident_email ? 'Occupé' : '<span style="color:var(--text-muted); font-style:italic;">Vacant</span>'}</span>
+                    <div style="font-weight: 700; color: #E0E2EB;">${res.apartment}</div>
+                    <div style="font-size: 0.7rem; color: #8A8D9F;">${res.resident_email ? 'Occupé' : 'Vacant'}</div>
                 `;
                 tr.appendChild(nameTd);
 
-                // Initialize months array (1-12)
                 const monthStatus = new Array(12).fill('empty');
-                
-                // Map over the payments if any exist for this unit in this year
                 if (res.payments) {
                     res.payments.forEach(cot => {
                         const pd = new Date(cot.payment_date);
                         if (pd.getFullYear() === parseInt(targetYear)) {
-                            const mIndex = pd.getMonth(); // 0-11
-                            if (mIndex >= 0 && mIndex < 12) {
-                                monthStatus[mIndex] = 'paid';
-                            }
+                            const mIndex = pd.getMonth();
+                            if (mIndex >= 0 && mIndex < 12) monthStatus[mIndex] = 'paid';
                         }
                     });
                 }
 
-                // Append columns for all 12 months
                 for (let i = 0; i < 12; i++) {
                     const td = document.createElement('td');
                     const status = monthStatus[i];
 
                     if (status === 'paid') {
-                        td.innerHTML = '<span class="status-icon paid"><i data-lucide="check" style="width: 14px; height: 14px;"></i></span>';
-                    } else if (status === 'unpaid') {
-                        td.innerHTML = '<span class="status-icon unpaid"><i data-lucide="x" style="width: 14px; height: 14px;"></i></span>';
+                        td.innerHTML = '<div class="dot-paid"></div>';
                     } else {
-                        td.innerHTML = '<span class="status-icon empty"><i data-lucide="minus" style="width: 14px; height: 14px;"></i></span>';
+                        td.innerHTML = '<div class="dot-empty"></div>';
                     }
                     tr.appendChild(td);
                 }
                 
                 tbody.appendChild(tr);
             });
-
-            if (window.lucide) {
-                lucide.createIcons();
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {

@@ -65,69 +65,41 @@ window.initExpenses = () => {
     };
 
     const renderExpenses = (expenses) => {
-        const section = document.querySelector('.glass-panel:nth-of-type(2)');
-        // Remove existing cards but keep header if any
-        const existingCards = section.querySelectorAll('.expense-card');
-        existingCards.forEach(c => c.remove());
+        const tbody = document.getElementById('expenses-tbody');
+        tbody.innerHTML = '';
 
         expenses.forEach(exp => {
-            const card = createExpenseCard(exp);
-            section.appendChild(card);
+            const row = createExpenseRow(exp);
+            tbody.appendChild(row);
         });
 
-        expenseCards = document.querySelectorAll('.expense-card');
+        expenseCards = document.querySelectorAll('#expenses-tbody tr');
         applyFilter(activeFilter);
         
         if (window.lucide) lucide.createIcons();
     };
 
-    const createExpenseCard = (exp) => {
-        let iconHtml = '';
-        let iconClass = '';
-        const cat = exp.category;
-        
-        if (cat === 'electricity') {
-            iconHtml = '<i data-lucide="zap"></i>';
-            iconClass = 'electricity';
-        } else if (cat === 'cleaning') {
-            iconHtml = '<i data-lucide="sparkles"></i>';
-            iconClass = 'cleaning';
-        } else if (cat === 'maintenance') {
-            iconHtml = '<i data-lucide="wrench"></i>';
-            iconClass = 'maintenance';
-        } else {
-            iconHtml = '<i data-lucide="file-text"></i>';
-            iconClass = 'electricity';
-        }
-
+    const createExpenseRow = (exp) => {
         const dateObj = new Date(exp.expense_date);
-        const dateStr = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const dateStr = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 
-        const div = document.createElement('div');
-        div.className = 'expense-card';
-        div.dataset.category = cat;
-        div.dataset.id = exp.id;
+        const tr = document.createElement('tr');
+        tr.dataset.category = exp.category;
+        tr.dataset.id = exp.id;
         
-        div.innerHTML = `
-            <div class="expense-icon ${iconClass}">
-                ${iconHtml}
-            </div>
-            <div class="expense-details">
-                <div class="expense-title">${exp.title}</div>
-                <div class="expense-meta">
-                    <span><i data-lucide="calendar"></i> ${dateStr}</span>
-                    <span><i data-lucide="building"></i> ${exp.provider || 'N/A'}</span>
-                </div>
-            </div>
-            <div class="receipt-badge">
-                <i data-lucide="file-check"></i> Reçu
-            </div>
-            <div class="expense-amount">- ${parseFloat(exp.amount).toFixed(2)} MAD</div>
-            <div class="expense-actions admin-only">
-                <button class="btn-icon-soft"><i data-lucide="more-vertical"></i></button>
-            </div>
+        tr.innerHTML = `
+            <td style="color:var(--text-muted); font-size:0.8rem;">${dateStr}</td>
+            <td style="font-weight:600;">${exp.title}</td>
+            <td>${exp.provider || '-'}</td>
+            <td>
+                <span class="badge-warning">${exp.category}</span>
+            </td>
+            <td class="amount-expense">- ${parseFloat(exp.amount).toLocaleString('fr-FR')} MAD</td>
+            <td class="text-right admin-only">
+                <button class="premium-btn"><i data-lucide="more-vertical"></i></button>
+            </td>
         `;
-        return div;
+        return tr;
     };
 
     // ═══════════════════════════════════════
