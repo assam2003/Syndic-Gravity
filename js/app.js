@@ -135,7 +135,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isDashboard = window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/Syndic-Gravity/');
 
     if (isDashboard) {
-        checkUnitsCapacity();
         updateDashboardStats();
 
         // Modal Setup Interaction
@@ -186,23 +185,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     loadingMsg.style.display = 'none';
                 }
             });
-        }
-    }
-
-    async function checkUnitsCapacity() {
-        try {
-            const { count, error } = await window.supabaseClient
-                .from('units')
-                .select('*', { count: 'exact', head: true });
-                
-            if (error) throw error;
-
-            if (count === 0 && userRole === 'syndic') {
-                const modal = document.getElementById('modal-setup-units');
-                if (modal) modal.classList.add('active');
-            }
-        } catch (err) {
-            console.error('Error checking units capacity:', err);
         }
     }
 
@@ -364,7 +346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                             // If back to dashboard, run update methods
                             if (url.includes('index.html') || url === '/' || url === '') {
-                                checkUnitsCapacity();
                                 updateDashboardStats();
                             }
                             

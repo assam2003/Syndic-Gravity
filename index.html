@@ -320,28 +320,6 @@
                 </div>
             </div>
         </main>
-    <!-- Modal Configuration des Unités -->
-    <div class="modal-overlay" id="modal-setup-units">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <div class="modal-header" style="justify-content: center;">
-                <div class="modal-title lang-fr">Configuration Initiale</div>
-                <div class="modal-title lang-ar hidden">الإعداد الأولي</div>
-            </div>
-            <div class="modal-body">
-                <p class="lang-fr" style="margin-bottom: 20px; color: var(--text-muted);">Combien d'appartements ou d'unités compte votre bâtiment ?</p>
-                <p class="lang-ar hidden" style="margin-bottom: 20px; color: var(--text-muted);">كم عدد الشقق أو الوحدات في المبنى الخاص بك؟</p>
-                <form id="form-setup-units">
-                    <div class="form-group">
-                        <input type="number" id="input-units-count" min="1" max="1000" required placeholder="Ex: 24 (Appuyez sur Entrée)" style="text-align: center; font-size: 1.2rem; padding: 12px; border: 2px solid var(--border); border-radius: 12px; width: 100%;">
-                    </div>
-                    <div id="setup-loading" style="display: none; margin-top: 15px; color: var(--accent);">
-                        <span class="lang-fr">Création en cours, veuillez patienter...</span>
-                        <span class="lang-ar hidden">جارٍ الإنشاء، يرجى الانتظار...</span>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
