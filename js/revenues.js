@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+window.initRevenues = () => {
+    console.log("Initializing Revenues module...");
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // Search
@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const tr = document.createElement('tr');
             tr.dataset.id = res.id;
+            if (!isPaid) tr.classList.add('overdue-row');
             tr.innerHTML = `
                 <td>
                     <div class="apt-badge">${res.apartment}</div>
@@ -209,21 +210,34 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal();
     };
 
-    // Initial fetch
-    fetchCotisations();
-
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);
     });
 
-    // Alert Reminder Button
     const btnRemind = document.getElementById('btn-remind-all');
     if (btnRemind) {
         btnRemind.addEventListener('click', () => {
             const currentLang = localStorage.getItem('lang') || 'fr';
-            alert(currentLang === 'fr' ? 'Rappels envoyés aux 1 retardataires avec succès !' : 'تم إرسال تذكير إلى 1 شخص متأخر بنجاح!');
+            alert(currentLang === 'fr' ? 'Rappels envoyés aux retardataires avec succès !' : 'تم إرسال تذكير إلى المتأخرين بنجاح!');
             btnRemind.style.opacity = '0.5';
             btnRemind.disabled = true;
         });
+    }
+
+    // Initial fetch
+    fetchCotisations();
+};
+
+// Handle load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initRevenues);
+} else {
+    window.initRevenues();
+}
+
+// SPA Hook
+document.addEventListener('spa:pageLoaded', () => {
+    if (document.getElementById('revenues-tbody')) {
+        window.initRevenues();
     }
 });

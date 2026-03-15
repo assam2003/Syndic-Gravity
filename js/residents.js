@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+window.initResidents = () => {
+    console.log("Initializing Residents module...");
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // --- DOM Elements for Search ---
@@ -353,6 +353,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     };
 
-    // Initial attachment
-    attachEditListeners();
+    // Initial fetch
+    fetchResidents();
+    document.addEventListener('unitsCreated', fetchResidents);
+};
+
+// Handle load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.initResidents);
+} else {
+    window.initResidents();
+}
+
+// SPA Hook
+document.addEventListener('spa:pageLoaded', () => {
+    if (document.querySelector('.data-table')) {
+        window.initResidents();
+    }
 });

@@ -188,6 +188,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    const animateCounter = (el, target) => {
+        if (!el) return;
+        const current = parseFloat(el.textContent.replace(/\s/g, '').replace(',', '.')) || 0;
+        const duration = 1000;
+        const start = performance.now();
+
+        const step = (now) => {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+            const value = current + (target - current) * easeProgress;
+            el.textContent = Math.floor(value).toLocaleString('fr-FR');
+            
+            if (progress < 1) {
+                requestAnimationFrame(step);
+            } else {
+                el.textContent = target.toLocaleString('fr-FR');
+            }
+        };
+        requestAnimationFrame(step);
+    };
+
     async function updateDashboardStats() {
         try {
             // Task 1: Financial Calculations
@@ -215,9 +237,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const incomeEl = document.getElementById('total-income');
             const expenseEl = document.getElementById('total-expense');
 
-            if (balanceEl) balanceEl.textContent = totalBalance.toLocaleString('fr-FR');
-            if (incomeEl) incomeEl.textContent = totalIncome.toLocaleString('fr-FR');
-            if (expenseEl) expenseEl.textContent = totalExpense.toLocaleString('fr-FR');
+            animateCounter(balanceEl, totalBalance);
+            animateCounter(incomeEl, totalIncome);
+            animateCounter(expenseEl, totalExpense);
 
             // Task 2: Automatic 'En Retard' (Late) Detection
             const d = new Date();
