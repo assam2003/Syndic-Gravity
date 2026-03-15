@@ -366,16 +366,15 @@
             document.getElementById('year-input').value = targetYear;
             document.getElementById('year-input-ar').value = targetYear;
 
-            // Fetch residents and their cotisations for the target year
-            const { data: residents, error } = await window.supabaseClient
-                .from('residents')
+            // Fetch units and their payments for the target year
+            const { data: unitsData, error } = await window.supabaseClient
+                .from('units')
                 .select(`
-                    id, name, apartment,
-                    cotisations (
-                        month, is_paid
+                    id, apartment, resident_email,
+                    payments (
+                        amount_paid, payment_date
                     )
                 `)
-                .eq('cotisations.year', parseInt(targetYear))
                 .order('apartment', { ascending: true });
 
             if (error) {
@@ -386,31 +385,34 @@
 
             tbody.innerHTML = ''; // Clear loading
 
-            if (!residents || residents.length === 0) {
+            if (!unitsData || unitsData.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;">Aucune donnée trouvée / لا توجد بيانات</td></tr>';
                 return;
             }
 
-            residents.forEach(res => {
+            unitsData.forEach(res => {
                 const tr = document.createElement('tr');
                 
                 // Apt Name Column
                 const nameTd = document.createElement('td');
                 nameTd.innerHTML = `
-                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${res.apartment}</div>
-                    <span style="font-weight: 500;">${res.name}</span>
+                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${res.apartment || '-'}</div>
+                    <span style="font-weight: 500;">${res.resident_email ? 'Occupé' : '<span style="color:var(--text-muted); font-style:italic;">Vacant</span>'}</span>
                 `;
                 tr.appendChild(nameTd);
 
                 // Initialize months array (1-12)
                 const monthStatus = new Array(12).fill('empty');
                 
-                // Map over the cotisations if any exist for this resident in this year
-                if (res.cotisations) {
-                    res.cotisations.forEach(cot => {
-                        const mIndex = cot.month - 1; // month is 1-12, array is 0-11
-                        if (mIndex >= 0 && mIndex < 12) {
-                            monthStatus[mIndex] = cot.is_paid ? 'paid' : 'unpaid';
+                // Map over the payments if any exist for this unit in this year
+                if (res.payments) {
+                    res.payments.forEach(cot => {
+                        const pd = new Date(cot.payment_date);
+                        if (pd.getFullYear() === parseInt(targetYear)) {
+                            const mIndex = pd.getMonth(); // 0-11
+                            if (mIndex >= 0 && mIndex < 12) {
+                                monthStatus[mIndex] = 'paid';
+                            }
                         }
                     });
                 }

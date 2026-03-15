@@ -281,4 +281,105 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // =========================================================================
+    //  SPA & APP STATE
+    // =========================================================================
+    
+    window.App = {
+        state: {
+            financials: { income: 0, expenses: 0, balance: 0 },
+            units: []
+        },
+        init() {
+            this.setupSPA();
+            this.setupRealtimeListeners();
+        },
+        setupRealtimeListeners() {
+            window.supabaseClient
+                .channel('public-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, payload => {
+                    console.log('Realtime payment update:', payload);
+                    if (document.getElementById('total-balance')) {
+                        updateDashboardStats();
+                    }
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, payload => {
+                    console.log('Realtime expense update:', payload);
+                    if (document.getElementById('total-balance')) {
+                        updateDashboardStats();
+                    }
+                })
+                .subscribe();
+        },
+        setupSPA() {
+            const navLinks = document.querySelectorAll('.sidebar-nav .nav-link');
+            const mainContent = document.querySelector('.main-content');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const url = link.getAttribute('href');
+                    
+                    // Update active state
+                    document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => item.classList.remove('active'));
+                    link.closest('.nav-item').classList.add('active');
+                    
+                    try {
+                        const response = await fetch(url);
+                        const html = await response.text();
+                        
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        const newMainContent = doc.querySelector('.main-content');
+                        if (newMainContent) {
+                            mainContent.innerHTML = newMainContent.innerHTML;
+                            
+                            // Re-bind Lucide icons
+                            if (window.lucide) lucide.createIcons();
+                            
+                            // Load scripts safely
+                            const scripts = doc.querySelectorAll('script[src]');
+                            scripts.forEach(script => {
+                                const src = script.getAttribute('src');
+                                if (src.includes('app.js') || src.includes('supabase') || src.includes('lucide')) return;
+                                
+                                // To make DOMContentLoaded fire in the imported script, we manually trigger the event
+                                // Or better, we load it dynamically
+                                const newScript = document.createElement('script');
+                                newScript.src = src;
+                                // Add timestamp to break cache and force reload so it executes
+                                newScript.src = src + '?t=' + Date.now();
+                                document.body.appendChild(newScript);
+                            });
+
+                            // Execute inline scripts (if any)
+                            const inlineScripts = doc.querySelectorAll('script:not([src])');
+                            inlineScripts.forEach(script => {
+                                try {
+                                    eval(script.innerText);
+                                } catch(e) {}
+                            });
+
+                            // If back to dashboard, run update methods
+                            if (url.includes('index.html') || url === '/' || url === '') {
+                                checkUnitsCapacity();
+                                updateDashboardStats();
+                            }
+                            
+                            // Dispatch a custom event to notify components that the SPA page has loaded
+                            const event = new Event('spa:pageLoaded');
+                            document.dispatchEvent(event);
+                        }
+                    } catch (error) {
+                        console.error("SPA Error: ", error);
+                    }
+                });
+            });
+        }
+    };
+
+    // Initialize the App state & SPA
+    window.App.init();
+
 }); // End of DOMContentLoaded

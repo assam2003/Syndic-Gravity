@@ -15,6 +15,44 @@
     
     <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/login.css">
+    <style>
+        .input-with-icon input {
+            padding-top: 14px;
+            padding-bottom: 14px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .input-with-icon input:focus {
+            border-color: #6d28d9; /* Purple */
+            box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.2);
+        }
+        .input-group {
+            margin-bottom: 24px;
+        }
+        .btn-submit {
+            width: 100%;
+            background-color: #6d28d9;
+            color: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        .btn-submit:hover {
+            background-color: #5b21b6;
+        }
+        .login-body {
+            background: linear-gradient(135deg, #1e1e2f, #151522) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-container {
+            margin: auto; /* Ensure centering */
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.03); /* slight bleed if needed */
+        }
+    </style>
 </head>
 <body class="light-mode login-body" dir="ltr">
 
@@ -127,28 +165,6 @@
                     <i data-lucide="arrow-right" class="rtl-flip btn-arrow"></i>
                 </button>
             </form>
-
-            <div class="login-divider">
-                <span class="lang-fr">ou</span>
-                <span class="lang-ar hidden">أو</span>
-            </div>
-
-            <div class="demo-logins">
-                <p class="demo-title lang-fr">Accès Démonstration :</p>
-                <p class="demo-title lang-ar hidden">وضع العرض التوضيحي :</p>
-                <div class="demo-buttons">
-                    <button class="btn-demo syndic" id="demo-syndic">
-                        <i data-lucide="shield"></i>
-                        <span class="lang-fr">Syndic (Admin)</span>
-                        <span class="lang-ar hidden">السنديك (المسؤول)</span>
-                    </button>
-                    <button class="btn-demo resident" id="demo-resident">
-                        <i data-lucide="user"></i>
-                        <span class="lang-fr">Habitant (Lecture)</span>
-                        <span class="lang-ar hidden">الساكن (قراءة فقط)</span>
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -308,8 +324,11 @@
                     showSuccess();
                     submitBtn.disabled = true;
                     
+                    // Check role in user_metadata, fallback to standard parsing or 'resident'
+                    const userRole = data.user.user_metadata?.role || (data.user.email.includes('admin') ? 'syndic' : 'resident');
+                    
                     // Store local flags for UI logic
-                    localStorage.setItem('userRole', 'syndic');
+                    localStorage.setItem('userRole', userRole);
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('userName', data.user.email.split('@')[0]);
                     
@@ -318,10 +337,6 @@
                     }, 1200);
                 }
             });
-
-            // ── Demo Buttons ──
-            document.getElementById('demo-syndic').addEventListener('click', () => doLogin('syndic', 'Syndic Demo'));
-            document.getElementById('demo-resident').addEventListener('click', () => doLogin('resident', 'Habitant Demo'));
 
             lucide.createIcons();
         });

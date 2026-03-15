@@ -56,36 +56,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchCotisations = async () => {
         // Fetch residents and their cotisations for current month/year
-        const { data: residents, error: resError } = await window.supabaseClient
-            .from('residents')
+        const { data: unitsData, error: resError } = await window.supabaseClient
+            .from('units')
             .select(`
                 id,
-                name,
                 apartment,
-                cotisations (
+                resident_email,
+                payments (
                     amount_paid,
-                    is_paid,
                     payment_date
                 )
-            `)
-            .eq('cotisations.month', currentMonth)
-            .eq('cotisations.year', currentYear);
+            `);
 
         if (resError) {
             console.error('Error:', resError);
             return;
         }
 
-        renderRevenues(residents);
+        renderRevenues(unitsData);
     };
 
-    const renderRevenues = (residents) => {
+    const renderRevenues = (unitsData) => {
         const tbody = document.getElementById('revenues-tbody');
         tbody.innerHTML = '';
 
-        residents.forEach(res => {
-            const cot = res.cotisations && res.cotisations[0];
-            const isPaid = cot ? cot.is_paid : false;
+        unitsData.forEach(res => {
+            // Filter payments for current month/year manually since nested filtering requires specific syntax
+            const currentMonthPayments = res.payments ? res.payments.filter(p => {
+                const pd = new Date(p.payment_date);
+                return pd.getMonth() + 1 === currentMonth && pd.getFullYear() === currentYear;
+            }) : [];
+            
+            const cot = currentMonthPayments[0];
+            const isPaid = !!cot;
             const payDate = cot && cot.payment_date ? new Date(cot.payment_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '';
 
             const tr = document.createElement('tr');
@@ -96,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td>
                     <div class="user-desc">
-                        <strong>${res.name}</strong>
+                        <strong>${res.resident_email ? 'Occupé' : '<span style="color:var(--text-muted); font-style:italic;">Vacant</span>'}</strong>
                     </div>
                 </td>
                 <td>400 MAD</td>
@@ -190,15 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { error } = await window.supabaseClient
-            .from('cotisations')
-            .upsert({
-                resident_id: residentId,
-                month: currentMonth,
-                year: currentYear,
+            .from('payments')
+            .insert({
+                unit_id: residentId,
                 amount_paid: parseFloat(amount),
-                is_paid: true,
                 payment_date: new Date().toISOString()
-            }, { onConflict: 'resident_id, month, year' });
+            });
 
         if (error) {
             alert('Error: ' + error.message);
