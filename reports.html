@@ -1,17 +1,335 @@
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
+<!DOCTYPE html>
+<html lang="fr" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Rapports</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-@media (max-width: 768px) {
-  .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
 
-@media (max-width: 480px) {
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .custom-select {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-panel-solid);
+            color: var(--text-main);
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-export {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--gradient-accent);
+            color: white;
+            border-radius: 10px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-export:hover {
+            opacity: 0.9;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-card {
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-container-large {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .kpi-card {
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .kpi-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .kpi-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .kpi-value.green { color: var(--success); }
+        .kpi-value.red { color: var(--danger); }
+    </style>
+</head>
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Rapports Financiers</h2>
+                    <h2 class="page-title lang-ar hidden">التقارير المالية</h2>
+                    <p class="page-subtitle lang-fr">Analyse graphique et bilan annuel de la copropriété.</p>
+                    <p class="page-subtitle lang-ar hidden">التحليل الرسومي والميزانية السنوية للعمارة.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">0</span>
+                    </button>
+                    
+                    <div class="user-profile" id="user-profile-menu">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="dashboard-wrapper">
+                
+                <div class="report-header">
+                    <div class="filter-group">
+                        <select class="custom-select" id="year-filter">
+                            <option value="2026">Année 2026</option>
+                            <option value="2025">Année 2025</option>
+                        </select>
+                        <select class="custom-select" id="type-filter">
+                            <option value="all">Tous les flux</option>
+                            <option value="cotisations">Cotisations seules</option>
+                            <option value="repairs">Fonds de réparation</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn-export" onclick="window.print()">
+                        <i data-lucide="printer"></i>
+                        <span class="lang-fr">Exporter PDF</span>
+                        <span class="lang-ar hidden">تصدير PDF</span>
+                    </button>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label lang-fr">Total Revenus (YTD)</div>
+                        <div class="kpi-label lang-ar hidden">إجمالي الإيرادات</div>
+                        <div class="kpi-value green">+45 200 <span style="font-size:0.9rem; opacity:0.7">MAD</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label lang-fr">Total Dépenses (YTD)</div>
+                        <div class="kpi-label lang-ar hidden">إجمالي المصروفات</div>
+                        <div class="kpi-value red">-28 400 <span style="font-size:0.9rem; opacity:0.7">MAD</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label lang-fr">Solde Net</div>
+                        <div class="kpi-label lang-ar hidden">الرصيد الصافي</div>
+                        <div class="kpi-value" style="color:var(--accent);">+16 800 <span style="font-size:0.9rem; opacity:0.7">MAD</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label lang-fr">Taux de Recouvrement</div>
+                        <div class="kpi-label lang-ar hidden">معدل التحصيل</div>
+                        <div class="kpi-value">84.5 <span style="font-size:0.9rem; opacity:0.7">%</span></div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    
+                    <!-- Chart 1: Bar Chart Incomes vs Expenses -->
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i data-lucide="bar-chart-3" style="color:var(--accent);"></i>
+                            <span class="lang-fr">Évolution Mensuelle (Revenus vs Dépenses)</span>
+                            <span class="lang-ar hidden">التطور الشهري (الإيرادات مقابل المصروفات)</span>
+                        </h3>
+                        <div class="chart-container-large">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Doughnut Chart Expenses Breakdown -->
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <i data-lucide="pie-chart" style="color:var(--warning);"></i>
+                            <span class="lang-fr">Répartition des Dépenses</span>
+                            <span class="lang-ar hidden">توزيع المصروفات</span>
+                        </h3>
+                        <div class="chart-container-large" style="display:flex; justify-content:center;">
+                            <canvas id="breakdownChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/reports.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+
+
+
