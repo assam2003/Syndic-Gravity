@@ -1,5 +1,5 @@
-window.initExpenses = () => {
-    console.log("Initializing Expenses module...");
+document.addEventListener('DOMContentLoaded', () => {
+
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // --- DOM Elements for Search ---
@@ -238,19 +238,5 @@ window.initExpenses = () => {
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);
     });
-};
-
-// Handle load
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.initExpenses);
-} else {
-    window.initExpenses();
-}
-
-// SPA Hook
-document.addEventListener('spa:pageLoaded', () => {
-    if (document.getElementById('modal-add-expense')) {
-        window.initExpenses();
-    }
 });
 

@@ -8,14 +8,14 @@
 .sidebar {
     width: 280px;
     background: var(--bg-glass);
-    backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(16px);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     position: fixed;
     height: 100vh;
     z-index: 100;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 
 body[dir="rtl"] .sidebar {
@@ -61,40 +61,27 @@ body[dir="rtl"] .sidebar {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 20px;
-    border-radius: 14px;
+    padding: 12px 16px;
+    border-radius: 12px;
     color: var(--text-muted);
     font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
+    transition: all 0.2s ease;
 }
 
 .nav-link i {
-    width: 22px;
-    height: 22px;
-    transition: transform 0.3s ease;
+    width: 20px;
+    height: 20px;
 }
 
 .nav-link:hover {
-    background-color: rgba(109, 40, 217, 0.08);
+    background-color: var(--border);
     color: var(--accent);
-    transform: translateX(4px);
-}
-
-.nav-link:hover i {
-    transform: scale(1.1);
 }
 
 .nav-item.active .nav-link {
     background: var(--gradient-accent);
     color: white;
-    box-shadow: 0 10px 20px -5px rgba(109, 40, 217, 0.4);
-    font-weight: 600;
-}
-
-.nav-item.active .nav-link i {
-    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
 }
 
 .sidebar-footer {
@@ -125,12 +112,6 @@ body[dir="rtl"] .sidebar {
     margin-left: 280px; /* LTR */
     padding: 32px;
     max-width: 1400px;
-    animation: fadeIn 0.4s ease-out forwards;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 body[dir="rtl"] .main-content {
@@ -260,8 +241,7 @@ body[dir="rtl"] .user-profile {
 .dashboard-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 40px;
-    padding-bottom: 40px;
+    gap: 32px;
 }
 
 .metrics-grid {
@@ -309,21 +289,16 @@ body[dir="rtl"] .user-profile {
 .metric-card:not(.gradient-1) .metric-icon.alert { color: var(--warning); background: rgba(245, 158, 11, 0.1); }
 
 .metric-content h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
 }
 
 .metric-value {
-    font-size: 2.25rem;
-    font-weight: 800;
+    font-size: 2rem;
+    font-weight: 700;
     color: var(--text-main);
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
 }
 
 .currency {
@@ -355,37 +330,20 @@ body[dir="rtl"] .user-profile {
 
 .progress-track {
     width: 100%;
-    height: 8px;
+    height: 6px;
     background: var(--border);
-    border-radius: 10px;
+    border-radius: 3px;
     overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .progress-fill {
     height: 100%;
     background: var(--success);
-    border-radius: 10px;
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
+    border-radius: 3px;
 }
 
-.progress-fill::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
-}
-
-.progress-fill.gradient-2 { background: var(--gradient-accent); box-shadow: 0 0 10px rgba(109, 40, 217, 0.3); }
-.progress-fill.gradient-3 { background: var(--gradient-warning); box-shadow: 0 0 10px rgba(217, 119, 6, 0.3); }
+.progress-fill.gradient-2 { background: var(--gradient-accent); }
+.progress-fill.gradient-3 { background: var(--gradient-warning); }
 
 .alert-text {
     margin-top: 12px;
@@ -424,13 +382,8 @@ body[dir="rtl"] .user-profile {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 28px 32px;
+    padding: 24px;
     border-bottom: 1px solid var(--border);
-}
-
-.section-header h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
 }
 
 .table-container {
@@ -446,12 +399,10 @@ body[dir="rtl"] .user-profile {
 
 .data-table th {
     text-align: left;
-    padding: 16px 20px;
+    padding: 12px 16px;
     color: var(--text-muted);
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-weight: 500;
+    font-size: 0.875rem;
     border-bottom: 1px solid var(--border);
 }
 
@@ -460,43 +411,25 @@ body[dir="rtl"] .data-table th.text-right,
 body[dir="rtl"] .data-table td.text-right { text-align: left; }
 
 .data-table td {
-    padding: 20px;
+    padding: 16px;
     border-bottom: 1px solid var(--border);
     color: var(--text-main);
     font-size: 0.95rem;
-    vertical-align: middle;
 }
 
 .data-table tbody tr {
-    transition: all 0.2s ease;
+    transition: background-color 0.2s;
 }
 
 .data-table tbody tr:hover {
-    background-color: rgba(109, 40, 217, 0.04);
-    transform: scale(1.002);
-}
-
-.overdue-row {
-    background-color: rgba(220, 38, 38, 0.03) !important;
-}
-
-.overdue-row td {
-    border-bottom: 1px solid rgba(220, 38, 38, 0.1);
-}
-
-.overdue-row:hover {
-    background-color: rgba(220, 38, 38, 0.05) !important;
-}
-
-.dark-mode .data-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: var(--border); /* Slightly higher opacity on hover */
 }
 
 /* TX Design */
 .tx-desc {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .tx-icon {
@@ -520,17 +453,11 @@ body[dir="rtl"] .data-table td.text-right { text-align: left; }
 }
 
 .project-card {
-    padding: 24px;
+    padding: 20px;
     background: var(--bg-panel-solid);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    box-shadow: var(--shadow-md);
-    transition: all 0.3s ease;
-}
-
-.project-card:hover {
-    box-shadow: var(--shadow-lg);
-    border-color: var(--accent-light);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
 }
 
 .project-header {
