@@ -1,38 +1,573 @@
-<html>
+<!DOCTYPE html>
+<html lang="fr" translate="no">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syndic Gravity - Fonds de Réparation</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/main.css">
     <style>
         .projects-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
         }
-        .project-card {
-            flex: 1 0 21%; /* Adjust the width as necessary */
-            margin: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            border-radius: 5px;
-            padding: 15px;
+
+        .repair-card {
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
             transition: transform 0.2s;
         }
-        .project-card:hover {
-            transform: scale(1.05);
+
+        .repair-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glass);
+            border-color: var(--border-solid);
         }
-        .progress {
-            width: 100%;
-            background-color: #f3f3f3;
-            border-radius: 5px;
+
+        .repair-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .repair-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--accent);
+        }
+
+        .repair-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 12px;
+            margin-bottom: 8px;
+        }
+
+        .repair-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        .repair-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .stat-value.total { color: var(--text-main); }
+        .stat-value.collected { color: var(--success); }
+
+        .progress-container {
+            margin-top: 16px;
+            margin-bottom: 20px;
+        }
+
         .progress-bar {
-            height: 20px;
-            background-color: #4caf50;
-            text-align: center;
-            color: white;
-            transition: width 0.3s;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-accent);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .repair-actions {
+            display: flex;
+            gap: 12px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .btn-view {
+            flex: 1;
+            padding: 8px;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-view:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Detail View specific styles */
+        .detail-view {
+            display: none;
+            background: var(--bg-panel-solid);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .detail-view.active {
+            display: block;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        .detail-title {
+            font-size: 1.5rem;
+            font-weight: 600;
         }
     </style>
 </head>
-<body>
-    <!-- Existing content of repairs.html -->
+<body class="light-mode" dir="ltr">
+    <div class="app-container">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i data-lucide="building-2" class="logo-icon"></i>
+                    <h1 class="logo-text">Syndic <span class="accent-text">Gravity</span></h1>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                            <i data-lucide="layout-dashboard"></i>
+                            <span class="lang-fr">Tableau de Bord</span>
+                            <span class="lang-ar hidden">لوحة القيادة</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="residents.html" class="nav-link">
+                            <i data-lucide="users"></i>
+                            <span class="lang-fr">Propriétaires</span>
+                            <span class="lang-ar hidden">الملاك والسكان</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="revenues.html" class="nav-link">
+                            <i data-lucide="arrow-down-to-line"></i>
+                            <span class="lang-fr">Cotisations</span>
+                            <span class="lang-ar hidden">المساهمات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="annual_revenues.html" class="nav-link">
+                            <i data-lucide="calendar"></i>
+                            <span class="lang-fr">Bilan Annuel</span>
+                            <span class="lang-ar hidden">الحصيلة السنوية</span>
+                        </a>
+                    </li>
+                    <li class="nav-item active">
+                        <a href="repairs.html" class="nav-link">
+                            <i data-lucide="hammer"></i>
+                            <span class="lang-fr">Fonds de Réparation</span>
+                            <span class="lang-ar hidden">صندوق الإصلاحات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="expenses.html" class="nav-link">
+                            <i data-lucide="wallet"></i>
+                            <span class="lang-fr">Dépenses</span>
+                            <span class="lang-ar hidden">المصاريف</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="reports.html" class="nav-link">
+                            <i data-lucide="file-bar-chart-2"></i>
+                            <span class="lang-fr">Rapports</span>
+                            <span class="lang-ar hidden">التقارير</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-btn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon hidden"></i>
+                    <span class="lang-fr theme-text">Mode Sombre</span>
+                    <span class="lang-ar hidden theme-text">الوضع الداكن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content area -->
+        <main class="main-content">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 class="page-title lang-fr">Fonds de Réparation</h2>
+                    <h2 class="page-title lang-ar hidden">صندوق الإصلاحات</h2>
+                    <p class="page-subtitle lang-fr">Gérez les projets exceptionnels et la collecte des fonds dédiés.</p>
+                    <p class="page-subtitle lang-ar hidden">إدارة المشاريع الاستثنائية وجمع الأموال المخصصة.</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="lang-toggle" id="lang-btn">
+                        <i data-lucide="languages"></i>
+                        <span>AR / FR</span>
+                    </button>
+                    
+                    <button class="icon-btn notification-btn">
+                        <i data-lucide="bell"></i>
+                        <span class="badge">1</span>
+                    </button>
+                    
+                    <div class="user-profile" id="user-profile-menu">
+                        <div class="avatar">
+                            <img src="https://ui-avatars.com/api/?name=Admin+Syndic&background=0D8ABC&color=fff" alt="Admin">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Admin Syndic</span>
+                            <span class="user-role">Gestionnaire</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="dashboard-wrapper">
+                
+                <!-- Main Listing View -->
+                <div id="projects-view">
+                    <div class="action-bar glass-panel" style="margin-bottom: 24px;">
+                        <div class="search-box">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="search-repair" class="lang-fr" placeholder="Rechercher un projet...">
+                            <input type="text" id="search-repair-ar" class="lang-ar hidden" placeholder="البحث عن مشروع...">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-primary admin-only" id="btn-add-project">
+                                <i data-lucide="plus"></i>
+                                <span class="lang-fr">Nouveau Projet</span>
+                                <span class="lang-ar hidden">مشروع جديد</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="projects-grid">
+                        
+                        <!-- Project 1 -->
+                        <div class="repair-card">
+                            <div class="repair-header">
+                                <div class="repair-icon">
+                                    <i data-lucide="paint-roller"></i>
+                                </div>
+                                <span class="status active lang-fr">En cours</span>
+                                <span class="status active lang-ar hidden">جاري</span>
+                            </div>
+                            <h3 class="repair-title lang-fr">Peinture Façade Extérieure</h3>
+                            <h3 class="repair-title lang-ar hidden">صباغة الواجهة الخارجية</h3>
+                            <p class="repair-desc lang-fr">Rénovation complète de la peinture de la façade principale et arrière de l'immeuble.</p>
+                            <p class="repair-desc lang-ar hidden">تجديد كامل لصباغة الواجهة الأمامية والخلفية للعمارة.</p>
+                            
+                            <div class="repair-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label lang-fr">Budget Total</span>
+                                    <span class="stat-label lang-ar hidden">الميزانية الإجمالية</span>
+                                    <span class="stat-value total">24 000 MAD</span>
+                                </div>
+                                <div class="stat-item" style="align-items: flex-end;">
+                                    <span class="stat-label lang-fr">Fonds Collectés</span>
+                                    <span class="stat-label lang-ar hidden">الأموال المجمعة</span>
+                                    <span class="stat-value collected">18 000 MAD</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 75%;"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>75% collecté</span>
+                                    <span class="lang-fr">Reste: 6 000 MAD</span>
+                                    <span class="lang-ar hidden">الباقي: 6 000 MAD</span>
+                                </div>
+                            </div>
+
+                            <div class="repair-actions">
+                                <button class="btn-view" onclick="openDetailView('Peinture Façade Extérieure', '1200')">
+                                    <i data-lucide="eye"></i>
+                                    <span class="lang-fr">Gérer les Cotisations</span>
+                                    <span class="lang-ar hidden">إدارة المساهمات</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Project 2 -->
+                        <div class="repair-card">
+                            <div class="repair-header">
+                                <div class="repair-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">
+                                    <i data-lucide="arrow-up-down"></i>
+                                </div>
+                                <span class="status pending lang-fr">Nouveau</span>
+                                <span class="status pending lang-ar hidden">جديد</span>
+                            </div>
+                            <h3 class="repair-title lang-fr">Réparation Moteur Ascenseur</h3>
+                            <h3 class="repair-title lang-ar hidden">إصلاح محرك المصعد</h3>
+                            <p class="repair-desc lang-fr">Changement urgent des pièces défectueuses du moteur principal de l'ascenseur.</p>
+                            <p class="repair-desc lang-ar hidden">تغيير عاجل للأجزاء التالفة في المحرك الرئيسي للمصعد.</p>
+                            
+                            <div class="repair-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label lang-fr">Budget Total</span>
+                                    <span class="stat-label lang-ar hidden">الميزانية الإجمالية</span>
+                                    <span class="stat-value total">8 000 MAD</span>
+                                </div>
+                                <div class="stat-item" style="align-items: flex-end;">
+                                    <span class="stat-label lang-fr">Fonds Collectés</span>
+                                    <span class="stat-label lang-ar hidden">الأموال المجمعة</span>
+                                    <span class="stat-value collected">2 000 MAD</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 25%; background: var(--warning);"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>25% collecté</span>
+                                    <span class="lang-fr">Reste: 6 000 MAD</span>
+                                    <span class="lang-ar hidden">الباقي: 6 000 MAD</span>
+                                </div>
+                            </div>
+
+                            <div class="repair-actions">
+                                <button class="btn-view" onclick="openDetailView('Réparation Moteur Ascenseur', '400')">
+                                    <i data-lucide="eye"></i>
+                                    <span class="lang-fr">Gérer les Cotisations</span>
+                                    <span class="lang-ar hidden">إدارة المساهمات</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Detail View (Initially Hidden) -->
+                <div id="detail-view" class="detail-view">
+                    <div class="detail-header">
+                        <button class="btn-back" onclick="closeDetailView()">
+                            <i data-lucide="arrow-left"></i>
+                            <span class="lang-fr">Retour</span>
+                            <span class="lang-ar hidden">رجوع</span>
+                        </button>
+                        <h2 class="detail-title lang-fr">Cotisations : <span id="project-name-display-fr" style="color:var(--accent);"></span></h2>
+                        <h2 class="detail-title lang-ar hidden">مساهمات : <span id="project-name-display-ar" style="color:var(--accent);"></span></h2>
+                    </div>
+
+                    <div style="background: rgba(79, 70, 229, 0.05); padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid rgba(79, 70, 229, 0.2);">
+                        <div class="lang-fr"><strong>Part par propriétaire (20 appartements) :</strong> <span id="project-part-fr"></span> MAD</div>
+                        <div class="lang-ar hidden"><strong>حصة كل مالك (20 شقة) :</strong> <span id="project-part-ar"></span> درهم</div>
+                    </div>
+
+                    <div class="table-container" style="padding: 0;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <span class="lang-fr">Appartement</span>
+                                        <span class="lang-ar hidden">الشقة</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Propriétaire</span>
+                                        <span class="lang-ar hidden">المالك</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Montant à payer</span>
+                                        <span class="lang-ar hidden">المبلغ الواجب دفعه</span>
+                                    </th>
+                                    <th>
+                                        <span class="lang-fr">Statut</span>
+                                        <span class="lang-ar hidden">الحالة</span>
+                                    </th>
+                                    <th class="text-right admin-only">
+                                        <span class="lang-fr">Marquer Payé</span>
+                                        <span class="lang-ar hidden">تحديد كمدفوع</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><div class="apt-badge">Apt 01</div></td>
+                                    <td><strong>Hassan Lahlou</strong></td>
+                                    <td class="display-part"></td>
+                                    <td>
+                                        <span class="status active lang-fr">Payé</span>
+                                        <span class="status active lang-ar hidden">مدفوع</span>
+                                    </td>
+                                    <td class="text-right admin-only">
+                                        <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><div class="apt-badge">Apt 02</div></td>
+                                    <td><strong>Fatima Bennani</strong></td>
+                                    <td class="display-part"></td>
+                                    <td>
+                                        <span class="status pending lang-fr">Non Payé</span>
+                                        <span class="status pending lang-ar hidden">غير مدفوع</span>
+                                    </td>
+                                    <td class="text-right admin-only">
+                                        <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">
+                                            <i data-lucide="plus-circle" style="width:14px; height:14px;"></i> Encaisser
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Ajouter Projet -->
+    <div class="modal-overlay" id="modal-add-project">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title lang-fr">Créer un Fonds de Réparation</div>
+                <div class="modal-title lang-ar hidden">إنشاء صندوق إصلاحات</div>
+                <button class="btn-close" id="btn-close-project"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-add-project">
+                    <div class="form-group">
+                        <label class="lang-fr">Nom du Projet</label>
+                        <label class="lang-ar hidden">اسم المشروع</label>
+                        <input type="text" id="project-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Description (Motif de la réparation)</label>
+                        <label class="lang-ar hidden">الوصف (سبب الإصلاح)</label>
+                        <textarea id="project-desc" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Budget Total Requis (MAD)</label>
+                        <label class="lang-ar hidden">إجمالي الميزانية المطلوبة (درهم)</label>
+                        <input type="number" id="project-budget" placeholder="Ex: 10000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="lang-fr">Répartition de la cotisation</label>
+                        <label class="lang-ar hidden">توزيع المساهمة</label>
+                        <select id="project-calc" disabled style="background: rgba(0,0,0,0.05);">
+                            <option>Diviser également sur 20 appartements</option>
+                        </select>
+                        <small class="lang-fr" style="color:var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">Le montant individuel sera calculé automatiquement.</small>
+                        <small class="lang-ar hidden" style="color:var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">سيتم حساب المبلغ الفردي تلقائيًا.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary lang-fr" id="btn-cancel-project">Annuler</button>
+                <button class="btn-secondary lang-ar hidden" id="btn-cancel-project-ar">إلغاء</button>
+                
+                <button class="btn-primary lang-fr" id="btn-save-project">Créer le projet</button>
+                <button class="btn-primary lang-ar hidden" id="btn-save-project-ar">إنشاء المشروع</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/repairs.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
+
+
+
+
