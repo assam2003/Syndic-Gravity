@@ -354,27 +354,9 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/app.js"></script>
     <script>
-        // Mock Data for the Annual Table
-        const apartments = [
-            "Apt 01 - Hassan Lahlou",
-            "Apt 02 - Fatima Bennani",
-            "Apt 03 - Karim Idrissi",
-            "Apt 04 - Youssef Naciri",
-            "Apt 05 - Amina El Fassi"
-        ];
-
-        function getRandomStatus(monthIndex) {
-            // For future months in 2026, let's leave them empty
-            if (monthIndex > 2) return 'empty'; // After march
-
-            const rand = Math.random();
-            if (rand > 0.3) return 'paid';
-            return 'unpaid';
-        }
-
-        function loadYearData() {
+        async function loadYearData() {
             const tbody = document.getElementById('annual-tbody');
-            tbody.innerHTML = ''; // Clear previous
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding: 20px;">Chargement...</td></tr>'; // Loading state
 
             // Sync search inputs
             const frInput = document.getElementById('year-input').value;
@@ -384,33 +366,59 @@
             document.getElementById('year-input').value = targetYear;
             document.getElementById('year-input-ar').value = targetYear;
 
-            apartments.forEach(apt => {
+            // Fetch residents and their cotisations for the target year
+            const { data: residents, error } = await window.supabaseClient
+                .from('residents')
+                .select(`
+                    id, name, apartment,
+                    cotisations (
+                        month, is_paid
+                    )
+                `)
+                .eq('cotisations.year', parseInt(targetYear))
+                .order('apartment', { ascending: true });
+
+            if (error) {
+                console.error("Erreur de chargement:", error.message);
+                tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; color: var(--danger);">${error.message}</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = ''; // Clear loading
+
+            if (!residents || residents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;">Aucune donnée trouvée / لا توجد بيانات</td></tr>';
+                return;
+            }
+
+            residents.forEach(res => {
                 const tr = document.createElement('tr');
                 
                 // Apt Name Column
                 const nameTd = document.createElement('td');
-                // Extract badge vs name
-                const parts = apt.split(' - ');
                 nameTd.innerHTML = `
-                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${parts[0]}</div>
-                    <span style="font-weight: 500;">${parts[1]}</span>
+                    <div class="apt-badge" style="display:inline-block; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.05); font-size:0.8rem; margin-right: 8px;">${res.apartment}</div>
+                    <span style="font-weight: 500;">${res.name}</span>
                 `;
                 tr.appendChild(nameTd);
 
-                // Months Columns
+                // Initialize months array (1-12)
+                const monthStatus = new Array(12).fill('empty');
+                
+                // Map over the cotisations if any exist for this resident in this year
+                if (res.cotisations) {
+                    res.cotisations.forEach(cot => {
+                        const mIndex = cot.month - 1; // month is 1-12, array is 0-11
+                        if (mIndex >= 0 && mIndex < 12) {
+                            monthStatus[mIndex] = cot.is_paid ? 'paid' : 'unpaid';
+                        }
+                    });
+                }
+
+                // Append columns for all 12 months
                 for (let i = 0; i < 12; i++) {
                     const td = document.createElement('td');
-                    let status = 'paid';
-                    
-                    if (targetYear === '2026') {
-                        status = getRandomStatus(i);
-                        // Make Mar 2026 unpaid for demo purposes on Apt 02
-                        if (i === 2 && apt.includes('Apt 02')) status = 'unpaid';
-                    } else if (targetYear < '2026') {
-                        status = Math.random() > 0.1 ? 'paid' : 'unpaid'; // mostly paid in past years
-                    } else {
-                        status = 'empty'; // future years
-                    }
+                    const status = monthStatus[i];
 
                     if (status === 'paid') {
                         td.innerHTML = '<span class="status-icon paid"><i data-lucide="check" style="width: 14px; height: 14px;"></i></span>';
