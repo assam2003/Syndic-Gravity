@@ -200,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch initial data
     fetchResidents();
+    document.addEventListener('unitsCreated', fetchResidents);
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);

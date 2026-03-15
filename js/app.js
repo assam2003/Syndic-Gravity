@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const unitsToInsert = [];
                     for (let i = 1; i <= count; i++) {
-                        unitsToInsert.push({ apartment: `Apt ${i.toString().padStart(2, '0')}`, resident_email: null });
+                        unitsToInsert.push({ apartment: `Apt ${i.toString().padStart(2, '0')}` });
                     }
 
                     const { error } = await window.supabaseClient
@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                     document.getElementById('modal-setup-units').classList.remove('active');
                     updateDashboardStats(); // Refresh
+                    document.dispatchEvent(new Event('unitsCreated'));
                 } catch (err) {
                     console.error('Error generating units:', err);
                     alert('Erreur: ' + err.message);
