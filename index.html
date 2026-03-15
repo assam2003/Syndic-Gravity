@@ -137,9 +137,7 @@
                         </div>
                         <div class="metric-content">
                             <h3 class="lang-fr">Solde Actuel</h3>
-                            <h3 class="lang-ar hidden">الرصيد الحالي</h3>
-                            <div class="metric-value">45 200 <span class="currency">MAD</span></div>
-                            <div class="metric-trend positive">
+                            <div class="metric-value"><span id="total-balance">45 200</span> <span class="currency">MAD</span></div>
                                 <i data-lucide="trending-up"></i> +12.5% vs mois dernier
                             </div>
                         </div>
@@ -151,9 +149,7 @@
                         </div>
                         <div class="metric-content">
                             <h3 class="lang-fr">Revenus (Ce mois)</h3>
-                            <h3 class="lang-ar hidden">الدخل (هذا الشهر)</h3>
-                            <div class="metric-value">12 400 <span class="currency">MAD</span></div>
-                            <div class="progress-bar-container">
+                            <div class="metric-value"><span id="total-income">12 400</span> <span class="currency">MAD</span></div>
                                 <div class="progress-info">
                                     <span>Taux de recouvrement</span>
                                     <span>85%</span>
@@ -171,9 +167,7 @@
                         </div>
                         <div class="metric-content">
                             <h3 class="lang-fr">Dépenses (Ce mois)</h3>
-                            <h3 class="lang-ar hidden">المصاريف (هذا الشهر)</h3>
-                            <div class="metric-value">3 800 <span class="currency">MAD</span></div>
-                            <div class="alert-text subtle">Nettoyage, Électricité commune</div>
+                            <div class="metric-value"><span id="total-expense">3 800</span> <span class="currency">MAD</span></div>
                         </div>
                     </div>
                     
@@ -183,9 +177,7 @@
                         </div>
                         <div class="metric-content">
                             <h3 class="lang-fr">Retards de Paiement</h3>
-                            <h3 class="lang-ar hidden">تأخر في الدفع</h3>
-                            <div class="metric-value">4 <span class="text-sm">Appartements</span></div>
-                            <button class="action-link lang-fr admin-only">Envoyer rappels <i data-lucide="arrow-right"></i></button>
+                            <div class="metric-value"><span id="total-late">4</span> <span class="text-sm">Appartements</span></div>
                             <button class="action-link lang-ar hidden admin-only">إرسال تذكير <i data-lucide="arrow-left"></i></button>
                         </div>
                     </div>
@@ -328,6 +320,31 @@
                 </div>
             </div>
         </main>
+    <!-- Modal Configuration des Unités -->
+    <div class="modal-overlay" id="modal-setup-units">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header" style="justify-content: center;">
+                <div class="modal-title lang-fr">Configuration Initiale</div>
+                <div class="modal-title lang-ar hidden">الإعداد الأولي</div>
+            </div>
+            <div class="modal-body">
+                <p class="lang-fr" style="margin-bottom: 20px; color: var(--text-muted);">Combien d'appartements ou d'unités compte votre bâtiment ?</p>
+                <p class="lang-ar hidden" style="margin-bottom: 20px; color: var(--text-muted);">كم عدد الشقق أو الوحدات في المبنى الخاص بك؟</p>
+                <form id="form-setup-units">
+                    <div class="form-group">
+                        <input type="number" id="input-units-count" min="1" max="1000" required placeholder="Ex: 24" style="text-align: center; font-size: 1.2rem; padding: 12px; border: 2px solid var(--border); border-radius: 12px;">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 15px; padding: 12px;">
+                        <span class="lang-fr">Générer les <span id="units-placeholder">...</span> unités</span>
+                        <span class="lang-ar hidden">إنشاء <span id="units-placeholder-ar">...</span> وحدات</span>
+                    </button>
+                    <div id="setup-loading" style="display: none; margin-top: 15px; color: var(--accent);">
+                        <span class="lang-fr">Création en cours, veuillez patienter...</span>
+                        <span class="lang-ar hidden">جارٍ الإنشاء، يرجى الانتظار...</span>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

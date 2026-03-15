@@ -61,9 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Supabase Integration Functions ---
     const fetchResidents = async () => {
         const { data, error } = await window.supabaseClient
-            .from('residents')
+            .from('units')
             .select('*')
-            .order('created_at', { ascending: false });
+            .order('apartment', { ascending: true });
 
         if (error) {
             console.error('Error fetching residents:', error);
@@ -91,26 +91,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createResidentRow = (res) => {
         const tr = document.createElement('tr');
+        const isVacant = !res.resident_email && !res.name;
+        
         tr.dataset.id = res.id; // Store Supabase ID
         tr.innerHTML = `
             <td>
-                <div class="apt-badge">${res.apartment}</div>
+                <div class="apt-badge">${res.apartment || '-'}</div>
                 <span class="text-sm">${res.floor || ''}</span>
             </td>
             <td>
                 <div class="user-desc">
-                    <strong>${res.name}</strong>
-                    <span class="text-sm">${res.type}</span>
+                    <strong>${isVacant ? '<span style="color:var(--text-muted); font-style:italic;" class="lang-fr">Vacant</span><span style="color:var(--text-muted); font-style:italic;" class="lang-ar hidden">شاغرة</span>' : (res.name || 'Inconnu')}</strong>
+                    <span class="text-sm">${isVacant ? '-' : (res.type || 'Résident')}</span>
                 </div>
             </td>
             <td>
                 <div class="contact-info">
-                    <span><i data-lucide="phone" class="icon-sm"></i> ${res.phone || '-'}</span>
+                    <span><i data-lucide="${res.resident_email ? 'mail' : 'phone'}" class="icon-sm"></i> ${res.resident_email || res.phone || '-'}</span>
                 </div>
             </td>
             <td>
-                <span class="status active lang-fr">À jour</span>
-                <span class="status active lang-ar hidden">مُحدَّث</span>
+                <span class="status ${isVacant ? 'pending' : 'active'} lang-fr">${isVacant ? 'Non Assigné' : 'Actif'}</span>
+                <span class="status ${isVacant ? 'pending' : 'active'} lang-ar hidden">${isVacant ? 'غير مخصص' : 'نشط'}</span>
             </td>
             <td class="text-right admin-only">
                 <button class="btn-icon-soft btn-edit-resident" title="Modifier"><i data-lucide="edit"></i></button>
@@ -165,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Save to Supabase ---
         const { data, error } = await window.supabaseClient
-            .from('residents')
+            .from('units')
             .insert([
                 { name, apartment: apt, phone, type, status: 'À jour' }
             ])
@@ -279,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Update Supabase ---
         const { error } = await window.supabaseClient
-            .from('residents')
+            .from('units')
             .update({ name: newName, apartment: newApt, phone: newPhone, type: newType })
             .eq('id', id);
 
