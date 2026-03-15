@@ -434,153 +434,46 @@ body[dir="rtl"] .user-profile {
 }
 
 .table-container {
-    background: rgba(30, 31, 43, 0.7);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    margin-top: 1.5rem;
-    position: relative;
+    padding: 0 24px 24px;
+    overflow-x: auto;
 }
 
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: left;
+    margin-top: 16px;
 }
 
 .data-table th {
-    padding: 1rem 1.5rem;
+    text-align: left;
+    padding: 16px 20px;
+    color: var(--text-muted);
+    font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #8A8D9F;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
 }
 
+body[dir="rtl"] .data-table th { text-align: right; }
+body[dir="rtl"] .data-table th.text-right,
+body[dir="rtl"] .data-table td.text-right { text-align: left; }
+
 .data-table td {
-    padding: 1rem 1.5rem;
-    font-size: 0.9rem;
-    color: #E0E2EB;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 0.95rem;
     vertical-align: middle;
 }
 
 .data-table tbody tr {
-    transition: background 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .data-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.03);
-    cursor: default;
-    transform: none; /* Removed scale for a cleaner table feel */
-}
-
-/* Sticky first column for scrolling tables */
-.sticky-col {
-    position: sticky;
-    left: 0;
-    background: #1e1f2b !important;
-    z-index: 5;
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
-}
-
-body[dir="rtl"] .sticky-col {
-    left: auto;
-    right: 0;
-}
-
-/* Global Status Badges */
-.badge-success {
-    background: rgba(46, 204, 113, 0.15);
-    color: #2ecc71;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.1);
-}
-
-.badge-danger {
-    background: rgba(231, 76, 60, 0.15);
-    color: #e74c3c;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.1);
-}
-
-.badge-warning {
-    background: rgba(241, 196, 15, 0.15);
-    color: #f1c40f;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Bilan status circular dots */
-.dot-paid {
-    width: 12px;
-    height: 12px;
-    background: #2ecc71;
-    border-radius: 50%;
-    margin: 0 auto;
-    box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
-    display: block;
-}
-
-.dot-empty {
-    width: 12px;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 50%;
-    margin: 0 auto;
-    display: block;
-}
-
-/* Premium Action Buttons */
-.premium-btn {
-    padding: 6px 12px;
-    border-radius: 8px;
-    background: rgba(138, 43, 226, 0.2);
-    color: #b366ff;
-    border: none;
-    cursor: pointer;
-    transition: 0.2s;
-    font-weight: 600;
-    font-size: 0.85rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.premium-btn:hover {
-    background: rgba(138, 43, 226, 0.4);
-    color: #d199ff;
-    box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
-}
-
-.amount-expense {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-.amount-income {
-    color: #2ecc71;
-    font-weight: 600;
+    background-color: rgba(109, 40, 217, 0.04);
+    transform: scale(1.002);
 }
 
 .overdue-row {

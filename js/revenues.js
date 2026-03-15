@@ -106,19 +106,20 @@ window.initRevenues = () => {
                 <td>400 MAD</td>
                 <td>
                     ${isPaid ? `
-                        <span class="badge-success lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé</span>
-                        <span class="badge-success lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> مدفوع</span>
+                        <span class="badge paid lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé le ${payDate}</span>
+                        <span class="badge paid lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> دُفِع في ${payDate}</span>
                     ` : `
-                        <span class="badge-danger lang-fr">Non payé</span>
-                        <span class="badge-danger lang-ar hidden">غير مدفوع</span>
+                        <span class="badge pending lang-fr">Non payé</span>
+                        <span class="badge pending lang-ar hidden">غير مدفوع</span>
                     `}
                 </td>
                 <td class="${isPaid ? '' : 'action-cell'} text-right admin-only">
                     ${isPaid ? `
-                        <button class="premium-btn" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
+                        <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
+                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
                     ` : `
-                        <button class="premium-btn mark-paid-btn lang-fr">Encaisser</button>
-                        <button class="premium-btn mark-paid-btn lang-ar hidden">تحصيل</button>
+                        <button class="btn-primary-soft mark-paid-btn lang-fr">Encaisser</button>
+                        <button class="btn-primary-soft mark-paid-btn lang-ar hidden">تحصيل</button>
                     `}
                 </td>
             `;

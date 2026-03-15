@@ -111,11 +111,12 @@ window.initResidents = () => {
                 </div>
             </td>
             <td>
-                <span class="${isVacant ? 'badge-warning' : 'badge-success'} lang-fr">${isVacant ? 'Vacant' : 'Occupé'}</span>
-                <span class="${isVacant ? 'badge-warning' : 'badge-success'} lang-ar hidden">${isVacant ? 'شاغر' : 'مسكون'}</span>
+                <span class="status ${isVacant ? 'pending' : 'active'} lang-fr">${isVacant ? 'Non Assigné' : 'Actif'}</span>
+                <span class="status ${isVacant ? 'pending' : 'active'} lang-ar hidden">${isVacant ? 'غير مخصص' : 'نشط'}</span>
             </td>
             <td class="text-right admin-only">
-                <button class="premium-btn btn-edit-resident" title="Modifier"><i data-lucide="edit"></i></button>
+                <button class="btn-icon-soft btn-edit-resident" title="Modifier"><i data-lucide="edit"></i></button>
+                <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
             </td>
         `;
         return tr;
