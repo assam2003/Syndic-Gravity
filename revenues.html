@@ -235,19 +235,19 @@
             <div class="dashboard-wrapper">
                 
                 <div class="period-selector">
-                    <button class="period-btn"><i data-lucide="chevron-left"></i></button>
-                    <div class="current-period lang-fr">Mars 2026</div>
-                    <div class="current-period lang-ar hidden">مارس 2026</div>
-                    <button class="period-btn" disabled><i data-lucide="chevron-right"></i></button>
+                    <button class="period-btn" id="btn-prev-month"><i data-lucide="chevron-left"></i></button>
+                    <div class="current-period" id="current-period-label">Mars 2026</div>
+                    <button class="period-btn" id="btn-next-month"><i data-lucide="chevron-right"></i></button>
                 </div>
 
+                <!-- Summary Metrics (Dynamic) -->
                 <div class="summary-cards">
                     <div class="summary-card accent">
                         <div class="summary-icon"><i data-lucide="inbox"></i></div>
                         <div class="summary-info">
                             <div class="summary-label lang-fr">Total Attendu</div>
                             <div class="summary-label lang-ar hidden">الإجمالي المتوقع</div>
-                            <div class="summary-val">15 000 <span class="text-sm" style="color: rgba(255,255,255,0.7)">MAD</span></div>
+                            <div class="summary-val" id="metric-expected">0 <span class="text-sm" style="color: rgba(255,255,255,0.7)">MAD</span></div>
                         </div>
                     </div>
                     <div class="summary-card">
@@ -255,7 +255,7 @@
                         <div class="summary-info">
                             <div class="summary-label lang-fr">Total Encaissé</div>
                             <div class="summary-label lang-ar hidden">إجمالي المحصل</div>
-                            <div class="summary-val">12 400 <span class="text-sm">MAD</span></div>
+                            <div class="summary-val" id="metric-collected">0 <span class="text-sm">MAD</span></div>
                         </div>
                     </div>
                     <div class="summary-card">
@@ -263,7 +263,7 @@
                         <div class="summary-info">
                             <div class="summary-label lang-fr">Reste à Recouvrer</div>
                             <div class="summary-label lang-ar hidden">الباقي للتحصيل</div>
-                            <div class="summary-val">2 600 <span class="text-sm">MAD</span></div>
+                            <div class="summary-val" id="metric-outstanding">0 <span class="text-sm">MAD</span></div>
                         </div>
                     </div>
                 </div>
@@ -275,7 +275,7 @@
                         <input type="text" id="search-input-ar" class="lang-ar hidden" placeholder="البحث عن شقة أو اسم...">
                     </div>
                     <div class="action-buttons">
-                        <button class="btn-primary admin-only" id="btn-remind-all">
+                        <button class="btn-primary" id="btn-remind-all">
                             <i data-lucide="bell-ring"></i>
                             <span class="lang-fr">Relancer les impayés</span>
                             <span class="lang-ar hidden">تذكير بالمتأخرات</span>
@@ -290,6 +290,10 @@
                             <thead>
                                 <tr>
                                     <th>
+                                        <span class="lang-fr">Mois</span>
+                                        <span class="lang-ar hidden">الشهر</span>
+                                    </th>
+                                    <th>
                                         <span class="lang-fr">Appartement</span>
                                         <span class="lang-ar hidden">الشقة</span>
                                     </th>
@@ -298,21 +302,21 @@
                                         <span class="lang-ar hidden">المالك</span>
                                     </th>
                                     <th>
-                                        <span class="lang-fr">Cotisation Mensuelle</span>
-                                        <span class="lang-ar hidden">المساهمة الشهرية</span>
+                                        <span class="lang-fr">Montant (MAD)</span>
+                                        <span class="lang-ar hidden">المبلغ (درهم)</span>
                                     </th>
                                     <th>
-                                        <span class="lang-fr">Statut (Mars)</span>
-                                        <span class="lang-ar hidden">الحالة (مارس)</span>
+                                        <span class="lang-fr">Statut</span>
+                                        <span class="lang-ar hidden">الحالة</span>
                                     </th>
-                                    <th class="text-right admin-only">
-                                        <span class="lang-fr">Marquer Payé</span>
-                                        <span class="lang-ar hidden">تحديد كمدفوع</span>
+                                    <th class="text-right">
+                                        <span class="lang-fr">Actions</span>
+                                        <span class="lang-ar hidden">إجراءات</span>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody id="revenues-tbody">
-                                <!-- Data will be populated via Supabase -->
+                                <!-- Dynamic rows injected by revenues.js -->
                             </tbody>
                         </table>
                     </div>

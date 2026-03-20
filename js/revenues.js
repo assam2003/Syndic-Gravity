@@ -1,272 +1,331 @@
 window.initRevenues = () => {
-    const userRole = localStorage.getItem('userRole') || 'resident';
+    const tbody = document.getElementById('revenues-tbody');
+    let localPayments = [];
+    let allUnits = [];
 
-    // Search
-    const searchInputs = [
-        document.getElementById('search-input-fr'),
-        document.getElementById('search-input-ar')
-    ];
-    let tableRows = document.querySelectorAll('#revenues-tbody tr');
+    // Period state
+    const now = new Date();
+    let selectedYear = now.getFullYear();
+    let selectedMonth = now.getMonth(); // 0-11
 
-    // Modals
+    const monthNamesFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+    // DOM refs
+    const metricExpected = document.getElementById('metric-expected');
+    const metricCollected = document.getElementById('metric-collected');
+    const metricOutstanding = document.getElementById('metric-outstanding');
+    const periodLabel = document.getElementById('current-period-label');
+    const btnPrev = document.getElementById('btn-prev-month');
+    const btnNext = document.getElementById('btn-next-month');
+    const searchInputs = document.querySelectorAll('#search-input-fr, #search-input-ar');
+
+    // Modal refs
     const modal = document.getElementById('modal-add-revenue');
+    const btnCloseRev = document.getElementById('btn-close-revenue');
+    const btnCancelRevs = document.querySelectorAll('#btn-cancel-revenue, #btn-cancel-revenue-ar');
+    const btnSaveRevs = document.querySelectorAll('#btn-save-revenue, #btn-save-revenue-ar');
     const inputApt = document.getElementById('rev-apt');
     const inputAmount = document.getElementById('rev-amount');
 
-    if (!modal && !document.getElementById('revenues-tbody')) return;
-
-    // Buttons Close
-    const btnClose = document.getElementById('btn-close-revenue');
-    const btnCancel = document.getElementById('btn-cancel-revenue');
-    const btnCancelAr = document.getElementById('btn-cancel-revenue-ar');
-    
-    // Button Save
-    const btnSave = document.getElementById('btn-save-revenue');
-    const btnSaveAr = document.getElementById('btn-save-revenue-ar');
-
-    // State Tracking
     let currentRowToUpdate = null;
 
-    // Search logic
-    const performSearch = (e) => {
-        const query = e.target.value.toLowerCase();
-
-        tableRows.forEach(row => {
-            const textContent = row.textContent.toLowerCase();
-            if (textContent.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        searchInputs.forEach(input => {
-            if (input && input !== e.target) {
-                input.value = e.target.value;
-            }
-        });
+    // =========================================================================
+    //  PERIOD NAVIGATION
+    // =========================================================================
+    const updatePeriodLabel = () => {
+        if (periodLabel) periodLabel.textContent = `${monthNamesFr[selectedMonth]} ${selectedYear}`;
     };
 
-    searchInputs.forEach(input => {
-        if (input) {
-            input.removeEventListener('input', performSearch);
-            input.addEventListener('input', performSearch);
-        }
+    if (btnPrev) btnPrev.addEventListener('click', () => {
+        selectedMonth--;
+        if (selectedMonth < 0) { selectedMonth = 11; selectedYear--; }
+        updatePeriodLabel();
+        buildView();
     });
 
-    // --- Supabase Integration ---
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth() + 1; // 1-12
+    if (btnNext) btnNext.addEventListener('click', () => {
+        selectedMonth++;
+        if (selectedMonth > 11) { selectedMonth = 0; selectedYear++; }
+        updatePeriodLabel();
+        buildView();
+    });
 
-    const fetchCotisations = async () => {
-        const { data: unitsData, error: resError } = await window.supabaseClient
+    // =========================================================================
+    //  DATA FETCHING
+    // =========================================================================
+    const fetchData = async () => {
+        // 1. Fetch all units
+        const { data: unitsData, error: unitsErr } = await window.supabaseClient
             .from('units')
+            .select('id, unit_number, owner_name, monthly_fee')
+            .order('unit_number', { ascending: true });
+
+        if (unitsErr) { console.error('Units fetch error:', unitsErr); return; }
+        allUnits = unitsData || [];
+
+        // 2. Fetch all payments (with unit join)
+        const { data: paymentsData, error: payErr } = await window.supabaseClient
+            .from('payments')
             .select(`
                 id,
-                unit_number,
-                resident_email,
-                payments (
-                    amount_paid,
-                    payment_date
+                amount_paid,
+                billing_month,
+                status,
+                payment_date,
+                unit_id,
+                units (
+                    unit_number,
+                    owner_name,
+                    monthly_fee
                 )
-            `);
+            `)
+            .order('payment_date', { ascending: false });
 
-        if (resError) {
-            console.error('Error:', resError);
-            return;
-        }
+        if (payErr) { console.error('Payments fetch error:', payErr); return; }
+        localPayments = paymentsData || [];
 
-        renderRevenues(unitsData);
-        updateSummaryCards(unitsData);
+        buildView();
     };
 
-    const renderRevenues = (unitsData) => {
-        const tbody = document.getElementById('revenues-tbody');
+    // =========================================================================
+    //  BUILD VIEW (Metrics + Table)
+    // =========================================================================
+    const buildView = () => {
+        // Build a billing key like "2026-03"
+        const billingKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+        // Match payments for the selected month
+        const monthPayments = localPayments.filter(p => {
+            if (p.billing_month) return p.billing_month === billingKey;
+            // Fallback: use payment_date
+            if (p.payment_date) {
+                const d = new Date(p.payment_date);
+                return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+            }
+            return false;
+        });
+
+        // Build a map: unit_id -> payment
+        const paidMap = {};
+        monthPayments.forEach(p => {
+            paidMap[p.unit_id] = p;
+        });
+
+        // Calculate metrics
+        const totalExpected = allUnits.reduce((sum, u) => sum + (parseFloat(u.monthly_fee) || 0), 0);
+        const totalCollected = monthPayments
+            .filter(p => (p.status || 'paid').toLowerCase() === 'paid')
+            .reduce((sum, p) => sum + (parseFloat(p.amount_paid) || 0), 0);
+        const outstanding = totalExpected - totalCollected;
+
+        updateMetrics(totalExpected, totalCollected, outstanding);
+
+        // Build merged rows: one row per unit
+        const rows = allUnits.map(unit => {
+            const payment = paidMap[unit.id];
+            return {
+                unit_id: unit.id,
+                unit_number: unit.unit_number,
+                owner_name: unit.owner_name,
+                monthly_fee: unit.monthly_fee,
+                billing_month: billingKey,
+                payment_id: payment ? payment.id : null,
+                amount_paid: payment ? payment.amount_paid : 0,
+                status: payment ? (payment.status || 'paid') : 'pending',
+            };
+        });
+
+        renderTable(rows);
+    };
+
+    // =========================================================================
+    //  METRICS UPDATE
+    // =========================================================================
+    const updateMetrics = (expected, collected, outstanding) => {
+        if (metricExpected) metricExpected.innerHTML = `${expected.toLocaleString('fr-FR')} <span class="text-sm" style="color: rgba(255,255,255,0.7)">MAD</span>`;
+        if (metricCollected) metricCollected.innerHTML = `${collected.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
+        if (metricOutstanding) metricOutstanding.innerHTML = `${outstanding.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
+    };
+
+    // =========================================================================
+    //  TABLE RENDERING
+    // =========================================================================
+    const renderTable = (rows) => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        unitsData.forEach(res => {
-            const currentMonthPayments = res.payments ? res.payments.filter(p => {
-                const pd = new Date(p.payment_date);
-                return pd.getMonth() + 1 === currentMonth && pd.getFullYear() === currentYear;
-            }) : [];
-            
-            const cot = currentMonthPayments[0];
-            const isPaid = !!cot;
-            const payDate = cot && cot.payment_date ? new Date(cot.payment_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) : '';
+        if (rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center" style="padding:32px; color:var(--text-muted);"><i data-lucide="inbox" style="opacity:0.3; width:28px; height:28px;"></i><br><span class="lang-fr">Aucune donnée pour cette période</span><span class="lang-ar hidden">لا توجد بيانات لهذه الفترة</span></td></tr>`;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
 
+        rows.forEach(row => {
             const tr = document.createElement('tr');
-            tr.dataset.id = res.id;
+            tr.dataset.unitId = row.unit_id;
+            if (row.payment_id) tr.dataset.paymentId = row.payment_id;
+
+            const isPaid = row.status.toLowerCase() === 'paid' || row.status.toLowerCase() === 'payé';
+            const fee = parseFloat(row.monthly_fee || 0).toLocaleString('fr-FR');
+
             tr.innerHTML = `
                 <td>
-                    <div class="apt-badge">${res.unit_number || '?'}</div>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">${monthNamesFr[selectedMonth]} ${selectedYear}</span>
                 </td>
                 <td>
-                    <div class="user-desc">
-                        <strong>${res.resident_email ? 'Occupé' : '<span style="color:var(--text-muted); font-style:italic;">Vacant</span>'}</strong>
+                    <span class="badge active">${row.unit_number || 'N/A'}</span>
+                </td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:30px; height:30px; border-radius:50%; background:var(--gradient-accent, #4F46E5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.75rem;">
+                            ${(row.owner_name || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <strong style="color: var(--text-main);">${row.owner_name || 'Inconnu'}</strong>
                     </div>
                 </td>
-                <td>400 MAD</td>
                 <td>
-                    ${isPaid ? `
-                        <span class="badge paid lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé le ${payDate}</span>
-                        <span class="badge paid lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> دُفِع في ${payDate}</span>
-                    ` : `
-                        <span class="badge pending lang-fr">Non payé</span>
-                        <span class="badge pending lang-ar hidden">غير مدفوع</span>
-                    `}
+                    <strong>${fee}</strong> <span class="text-sm" style="color:var(--text-muted);">MAD</span>
                 </td>
-                <td class="${isPaid ? '' : 'action-cell'} text-right admin-only">
-                    ${isPaid ? `
-                        <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
-                        <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
-                    ` : `
-                        <button class="btn-primary-soft mark-paid-btn lang-fr">Encaisser</button>
-                        <button class="btn-primary-soft mark-paid-btn lang-ar hidden">تحصيل</button>
-                    `}
+                <td class="status-cell">
+                    ${isPaid
+                        ? `<span class="badge paid lang-fr"><i data-lucide="check" style="width:12px;height:12px;"></i> Payé</span>
+                           <span class="badge paid lang-ar hidden"><i data-lucide="check" style="width:12px;height:12px;"></i> مدفوع</span>`
+                        : `<span class="badge unpaid lang-fr">Non payé</span>
+                           <span class="badge unpaid lang-ar hidden">غير مدفوع</span>`
+                    }
+                </td>
+                <td class="text-right">
+                    ${isPaid
+                        ? `<button class="btn-icon-soft" disabled style="opacity:0.4;"><i data-lucide="check-circle-2" style="width:16px;height:16px;"></i></button>`
+                        : `<button class="btn-pay mark-paid-btn"><i data-lucide="banknotes"></i> <span class="lang-fr">Encaisser</span><span class="lang-ar hidden">تحصيل</span></button>`
+                    }
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
-        tableRows = document.querySelectorAll('#revenues-tbody tr');
         attachPaymentButtons();
-        
-        // Language sync
-        const currentLang = localStorage.getItem('lang') || 'fr';
-        if (currentLang === 'ar') {
-            tbody.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
-            tbody.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
-        }
-
         if (window.lucide) lucide.createIcons();
+        if (typeof applyLanguage === 'function') applyLanguage();
     };
 
-    const openModal = (aptName, row) => {
-        if (userRole === 'syndic') {
-            currentRowToUpdate = row;
-            if (inputApt) inputApt.value = aptName;
-            if (modal) modal.classList.add('active');
-            if (inputAmount) inputAmount.focus();
-        }
-    };
-
-    const closeModal = () => {
-        if (modal) modal.classList.remove('active');
-        const revForm = document.getElementById('form-add-revenue');
-        if (revForm) revForm.reset();
-        currentRowToUpdate = null;
-    };
-
+    // =========================================================================
+    //  PAYMENT BUTTONS
+    // =========================================================================
     const attachPaymentButtons = () => {
         document.querySelectorAll('.mark-paid-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                const tr = e.target.closest('tr');
-                const aptName = tr.querySelector('.apt-badge').textContent.trim();
-                openModal(aptName, tr);
-            };
+            btn.addEventListener('click', () => {
+                const row = btn.closest('tr');
+                currentRowToUpdate = row;
+                const unitNumber = row.querySelector('.badge.active')?.textContent || '';
+                if (inputApt) inputApt.value = unitNumber;
+                if (inputAmount) inputAmount.value = '';
+                if (modal) modal.classList.add('active');
+            });
         });
     };
 
-    [btnClose, btnCancel, btnCancelAr].forEach(btn => {
-        if (btn) btn.addEventListener('click', closeModal);
-    });
+    // =========================================================================
+    //  MODAL CONTROLS
+    // =========================================================================
+    const closeModal = () => { if (modal) modal.classList.remove('active'); currentRowToUpdate = null; };
 
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-    }
-
-    const updateSummaryCards = (unitsData) => {
-        const monthlyFee = 400;
-        const totalExpected = (unitsData || []).length * monthlyFee;
-        let totalCollected = 0;
-
-        (unitsData || []).forEach(res => {
-            const currentMonthPayments = res.payments ? res.payments.filter(p => {
-                const pd = new Date(p.payment_date);
-                return pd.getMonth() + 1 === currentMonth && pd.getFullYear() === currentYear;
-            }) : [];
-            if (currentMonthPayments.length > 0) {
-                totalCollected += parseFloat(currentMonthPayments[0].amount_paid) || monthlyFee;
-            }
-        });
-
-        const remaining = totalExpected - totalCollected;
-
-        // Update the summary card values in the DOM
-        const summaryVals = document.querySelectorAll('.summary-val');
-        if (summaryVals.length >= 3) {
-            summaryVals[0].innerHTML = `${totalExpected.toLocaleString('fr-FR')} <span class="text-sm" style="color: rgba(255,255,255,0.7)">MAD</span>`;
-            summaryVals[1].innerHTML = `${totalCollected.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
-            summaryVals[2].innerHTML = `${remaining.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
-        }
-    };
+    if (btnCloseRev) btnCloseRev.addEventListener('click', closeModal);
+    btnCancelRevs.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); closeModal(); }));
 
     const handleSave = async (e) => {
         e.preventDefault();
         if (!currentRowToUpdate) return;
-        const amount = inputAmount.value;
-        const residentId = currentRowToUpdate.dataset.id;
-        if (!amount || amount <= 0) {
-            alert("Montant invalide");
-            return;
-        }
+        const amount = parseFloat(inputAmount.value);
+        const unitId = currentRowToUpdate.dataset.unitId;
+        if (!amount || amount <= 0) { alert("Montant invalide"); return; }
 
-        // --- Optimistic UI: update the row immediately ---
-        const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-        const statusCell = currentRowToUpdate.querySelector('td:nth-child(4)');
-        const actionCell = currentRowToUpdate.querySelector('td:nth-child(5)');
+        const billingKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+        // --- OPTIMISTIC UI ---
+        // 1. Update badge to "Payé" instantly
+        const statusCell = currentRowToUpdate.querySelector('.status-cell');
         if (statusCell) {
             statusCell.innerHTML = `
-                <span class="badge paid lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé le ${today}</span>
-                <span class="badge paid lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> دُفِع في ${today}</span>
+                <span class="badge paid lang-fr"><i data-lucide="check" style="width:12px;height:12px;"></i> Payé</span>
+                <span class="badge paid lang-ar hidden"><i data-lucide="check" style="width:12px;height:12px;"></i> مدفوع</span>
             `;
         }
+
+        // 2. Disable the action button
+        const actionCell = currentRowToUpdate.querySelector('td:last-child');
         if (actionCell) {
-            actionCell.innerHTML = `
-                <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
-                <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
-            `;
+            actionCell.innerHTML = `<button class="btn-icon-soft" disabled style="opacity:0.4;"><i data-lucide="check-circle-2" style="width:16px;height:16px;"></i></button>`;
         }
+
+        // 3. Recalculate metrics instantly
+        const unitFee = parseFloat(allUnits.find(u => u.id == unitId)?.monthly_fee || amount);
+        const currentExpected = allUnits.reduce((s, u) => s + (parseFloat(u.monthly_fee) || 0), 0);
+        const currentCollectedBefore = parseFloat(metricCollected?.textContent?.replace(/[^\d]/g, '') || 0);
+        const newCollected = currentCollectedBefore + unitFee;
+        updateMetrics(currentExpected, newCollected, currentExpected - newCollected);
+
         if (window.lucide) lucide.createIcons();
+        if (typeof applyLanguage === 'function') applyLanguage();
         closeModal();
 
-        // --- Background: persist to Supabase ---
+        // --- BACKGROUND: persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('payments')
             .insert({
-                unit_id: residentId,
-                amount_paid: parseFloat(amount),
+                unit_id: unitId,
+                amount_paid: amount,
+                billing_month: billingKey,
+                status: 'paid',
                 payment_date: new Date().toISOString()
             });
 
         if (error) {
-            alert('Error: ' + error.message);
-            // Revert by re-fetching
-            fetchCotisations();
+            alert('Erreur: ' + error.message);
+            // Revert on error
+            fetchData();
             return;
         }
 
-        // Background re-sync to keep summary cards accurate
-        fetchCotisations();
+        // Background re-sync for accuracy
+        fetchData();
     };
 
-    if (btnSave) btnSave.addEventListener('click', handleSave);
-    if (btnSaveAr) btnSaveAr.addEventListener('click', handleSave);
+    btnSaveRevs.forEach(b => b.addEventListener('click', handleSave));
 
+    // =========================================================================
+    //  SEARCH
+    // =========================================================================
+    searchInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const allRows = tbody.querySelectorAll('tr');
+            allRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+    });
+
+    // =========================================================================
+    //  REMIND BUTTON
+    // =========================================================================
     const btnRemind = document.getElementById('btn-remind-all');
     if (btnRemind) {
         btnRemind.onclick = () => {
-            const currentLang = localStorage.getItem('lang') || 'fr';
-            alert(currentLang === 'fr' ? 'Rappels envoyés !' : 'تم إرسال التنبيهات!');
+            const lang = localStorage.getItem('lang') || 'fr';
+            alert(lang === 'fr' ? 'Rappels envoyés aux impayés !' : 'تم إرسال التنبيهات!');
             btnRemind.style.opacity = '0.5';
             btnRemind.disabled = true;
+            setTimeout(() => { btnRemind.style.opacity = '1'; btnRemind.disabled = false; }, 3000);
         };
     }
 
-    fetchCotisations();
+    // =========================================================================
+    //  INIT
+    // =========================================================================
+    updatePeriodLabel();
+    fetchData();
 };
 
 document.addEventListener('DOMContentLoaded', window.initRevenues);
