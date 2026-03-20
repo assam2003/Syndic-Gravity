@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- State ---
-    const userRole = localStorage.getItem('userRole') || 'resident';
+    const userRole = localStorage.getItem('userRole') || 'admin';
     let isDarkMode = localStorage.getItem('theme') === 'dark';
     let currentLang = localStorage.getItem('lang') || 'fr';
 

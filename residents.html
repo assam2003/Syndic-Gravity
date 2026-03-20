@@ -139,6 +139,30 @@
             <!-- Page Content -->
             <div class="dashboard-wrapper">
                 
+                <!-- Top Metrics -->
+                <div class="metrics-grid" style="margin-bottom: 24px;">
+                    <div class="metric-card" style="display: flex; gap: 16px; align-items: center;">
+                        <div class="metric-icon" style="background: rgba(79, 70, 229, 0.1); color: var(--accent); margin-bottom: 0;">
+                            <i data-lucide="building"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr" style="font-size: 0.85rem;">Total Unités</h3>
+                            <h3 class="lang-ar hidden" style="font-size: 0.85rem;">إجمالي الوحدات</h3>
+                            <div class="metric-value" id="stats-total-units">0</div>
+                        </div>
+                    </div>
+                    <div class="metric-card" style="display: flex; gap: 16px; align-items: center;">
+                        <div class="metric-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success); margin-bottom: 0;">
+                            <i data-lucide="wallet"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3 class="lang-fr" style="font-size: 0.85rem;">Revenu Mensuel Attendu</h3>
+                            <h3 class="lang-ar hidden" style="font-size: 0.85rem;">الإيرادات الشهرية المتوقعة</h3>
+                            <div class="metric-value" style="color: var(--success);"><span id="stats-total-fee">0</span> <span class="currency" style="font-size:1rem;">MAD</span></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Action Bar -->
                 <div class="action-bar glass-panel">
                     <div class="search-box">
@@ -147,11 +171,11 @@
                         <input type="text" id="search-input-ar" class="lang-ar hidden" placeholder="البحث بالاسم، الشقة...">
                     </div>
                     <div class="action-buttons">
-                        <!-- <button class="btn-primary admin-only" id="btn-add-resident">
-                            <i data-lucide="user-plus"></i>
-                            <span class="lang-fr">Nouveau Propriétaire</span>
-                            <span class="lang-ar hidden">مالك جديد</span>
-                        </button> -->
+                        <button class="btn-primary" id="btn-add-resident" style="cursor: pointer;">
+                            <i data-lucide="plus"></i>
+                            <span class="lang-fr">Ajouter</span>
+                            <span class="lang-ar hidden">إضافة</span>
+                        </button>
                     </div>
                 </div>
 
@@ -170,14 +194,10 @@
                                         <span class="lang-ar hidden">المالك</span>
                                     </th>
                                     <th>
-                                        <span class="lang-fr">Contact</span>
-                                        <span class="lang-ar hidden">جهة الاتصال</span>
+                                        <span class="lang-fr">Frais Mensuels (MAD)</span>
+                                        <span class="lang-ar hidden">الرسوم الشهرية (درهم)</span>
                                     </th>
-                                    <th>
-                                        <span class="lang-fr">Statut</span>
-                                        <span class="lang-ar hidden">الحالة</span>
-                                    </th>
-                                    <th class="text-right admin-only">
+                                    <th class="text-right">
                                         <span class="lang-fr">Actions</span>
                                         <span class="lang-ar hidden">إجراءات</span>
                                     </th>
@@ -214,18 +234,9 @@
                         <input type="text" id="input-apt" placeholder="Ex: Apt 04" required>
                     </div>
                     <div class="form-group">
-                        <label class="lang-fr">Contact (Téléphone)</label>
-                        <label class="lang-ar hidden">رقم الهاتف</label>
-                        <input type="text" id="input-phone">
-                    </div>
-                    <div class="form-group">
-                        <label class="lang-fr">Type Résident</label>
-                        <label class="lang-ar hidden">نوع الساكن</label>
-                        <select id="input-type">
-                            <option value="Propriétaire Résident">Propriétaire Résident</option>
-                            <option value="Propriétaire Non-Résident">Propriétaire Non-Résident</option>
-                            <option value="Locataire">Locataire</option>
-                        </select>
+                        <label class="lang-fr">Frais Mensuels (MAD)</label>
+                        <label class="lang-ar hidden">الرسوم الشهرية (درهم)</label>
+                        <input type="number" id="input-fee" placeholder="Ex: 400" required>
                     </div>
                 </form>
             </div>
@@ -261,18 +272,9 @@
                         <input type="text" id="edit-apt" required>
                     </div>
                     <div class="form-group">
-                        <label class="lang-fr">Contact (Téléphone)</label>
-                        <label class="lang-ar hidden">رقم الهاتف</label>
-                        <input type="text" id="edit-phone">
-                    </div>
-                    <div class="form-group">
-                        <label class="lang-fr">Type Résident</label>
-                        <label class="lang-ar hidden">نوع الساكن</label>
-                        <select id="edit-type">
-                            <option value="Propriétaire Résident">Propriétaire Résident</option>
-                            <option value="Propriétaire Non-Résident">Propriétaire Non-Résident</option>
-                            <option value="Locataire">Locataire</option>
-                        </select>
+                        <label class="lang-fr">Frais Mensuels (MAD)</label>
+                        <label class="lang-ar hidden">الرسوم الشهرية (درهم)</label>
+                        <input type="number" id="edit-fee" required>
                     </div>
                 </form>
             </div>
