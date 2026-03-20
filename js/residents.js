@@ -40,16 +40,16 @@ window.initResidents = () => {
         tr.dataset.id = unit.id;
         tr.innerHTML = `
             <td>
-                <span class="badge active lang-fr">${unit.apartment || 'N/A'}</span>
-                <span class="badge active lang-ar hidden">${unit.apartment || 'N/A'}</span>
+                <span class="badge active lang-fr">${unit.unit_number || 'N/A'}</span>
+                <span class="badge active lang-ar hidden">${unit.unit_number || 'N/A'}</span>
             </td>
             <td>
                 <div class="user-info-row" style="display:flex; align-items:center; gap:12px;">
                     <div class="avatar-sm" style="width:32px; height:32px; border-radius:50%; background:var(--gradient-accent, #4F46E5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.8rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);">
-                        ${(unit.name || '?').charAt(0).toUpperCase()}
+                        ${(unit.owner_name || '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <strong style="color: var(--text-main);">${unit.name || 'Inconnu'}</strong>
+                        <strong style="color: var(--text-main);">${unit.owner_name || 'Inconnu'}</strong>
                     </div>
                 </div>
             </td>
@@ -91,8 +91,8 @@ window.initResidents = () => {
 
         const { data, error } = await window.supabaseClient
             .from('units')
-            .select('id, apartment, name, monthly_fee')
-            .order('apartment', { ascending: true });
+            .select('id, unit_number, owner_name, monthly_fee')
+            .order('unit_number', { ascending: true });
 
         if (error) {
             console.error(error);
@@ -110,8 +110,8 @@ window.initResidents = () => {
         input.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             const filtered = localUnits.filter(u =>
-                (u.name && u.name.toLowerCase().includes(query)) ||
-                (u.apartment && u.apartment.toLowerCase().includes(query))
+                (u.owner_name && u.owner_name.toLowerCase().includes(query)) ||
+                (u.unit_number && u.unit_number.toLowerCase().includes(query))
             );
             renderTable(filtered);
         });
@@ -129,18 +129,18 @@ window.initResidents = () => {
 
     const handleAdd = async (e) => {
         e.preventDefault();
-        const name = document.getElementById('input-name').value.trim();
-        const apt = document.getElementById('input-apt').value.trim();
+        const owner_name = document.getElementById('input-name').value.trim();
+        const unit_number = document.getElementById('input-apt').value.trim();
         const fee = parseFloat(document.getElementById('input-fee').value);
 
-        if (!name || !apt || isNaN(fee)) {
+        if (!owner_name || !unit_number || isNaN(fee)) {
             alert("Veuillez remplir tous les champs correctement.");
             return;
         }
 
         // --- Optimistic UI ---
         const tempId = 'temp-' + Date.now();
-        const newUnit = { id: tempId, name, apartment: apt, monthly_fee: fee };
+        const newUnit = { id: tempId, owner_name, unit_number, monthly_fee: fee };
         localUnits.push(newUnit);
         
         updateMetrics();
@@ -148,9 +148,7 @@ window.initResidents = () => {
         closeAddModal();
 
         // --- Background: persist to Supabase ---
-        // (Removing 'phone', 'type', 'status' payload parts to strictly map the requested new schema. 
-        // If the DB throws a Not Null error on other columns, they should be made nullable).
-        const payload = { name, apartment: apt, monthly_fee: fee };
+        const payload = { owner_name, unit_number, monthly_fee: fee };
         
         const { error } = await window.supabaseClient.from('units').insert([payload]);
         if (error) {
@@ -164,8 +162,8 @@ window.initResidents = () => {
     // --- Edit Logistics ---
     const openEditModal = (unit) => {
         currentEditId = unit.id;
-        document.getElementById('edit-name').value = unit.name || '';
-        document.getElementById('edit-apt').value = unit.apartment || '';
+        document.getElementById('edit-name').value = unit.owner_name || '';
+        document.getElementById('edit-apt').value = unit.unit_number || '';
         document.getElementById('edit-fee').value = unit.monthly_fee || 0;
         if (modalEdit) modalEdit.classList.add('active');
     };
@@ -179,15 +177,15 @@ window.initResidents = () => {
         e.preventDefault();
         if (!currentEditId) return;
 
-        const name = document.getElementById('edit-name').value.trim();
-        const apt = document.getElementById('edit-apt').value.trim();
+        const owner_name = document.getElementById('edit-name').value.trim();
+        const unit_number = document.getElementById('edit-apt').value.trim();
         const fee = parseFloat(document.getElementById('edit-fee').value);
-        if (!name || !apt || isNaN(fee)) return alert("Champs invalides.");
+        if (!owner_name || !unit_number || isNaN(fee)) return alert("Champs invalides.");
 
         // --- Optimistic UI ---
         const index = localUnits.findIndex(u => u.id === currentEditId);
         if (index > -1) {
-            localUnits[index] = { ...localUnits[index], name, apartment: apt, monthly_fee: fee };
+            localUnits[index] = { ...localUnits[index], owner_name, unit_number, monthly_fee: fee };
             updateMetrics();
             
             // Replace specifically the edited row to prevent full table flicker
@@ -205,7 +203,7 @@ window.initResidents = () => {
         // --- Background persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('units')
-            .update({ name, apartment: apt, monthly_fee: fee })
+            .update({ owner_name, unit_number, monthly_fee: fee })
             .eq('id', currentEditId);
 
         if (error) {

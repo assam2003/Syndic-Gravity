@@ -108,8 +108,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 amount_paid,
                 payment_date,
                 units (
-                    apartment,
-                    name
+                    unit_number,
+                    owner_name
                 )
             `)
             .order('payment_date', { ascending: false })
@@ -156,9 +156,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const statusLabel = op.status || 'Payé';
             const isPaid = statusLabel.toLowerCase() === 'payé' || statusLabel.toLowerCase() === 'paid';
             const badgeClass = isPaid ? 'active' : 'pending'; // 'active' is green in CSS
-            
-            const unitLabel = op.units ? `Apt ${op.units.apartment}` : 'N/A';
-            const ownerName = op.units ? op.units.name : 'Inconnu';
+            const unitLabel = op.units ? `Apt ${op.units.unit_number || '?'}` : 'N/A';
+            const ownerName = op.units ? op.units.owner_name : 'Inconnu';
             const amount = parseFloat(op.amount_paid || 0).toLocaleString('fr-FR');
 
             const tr = document.createElement('tr');
@@ -234,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     e.preventDefault();
                     const count = parseInt(document.getElementById('input-units-count').value);
                     if (!count) return;
-                    const units = Array.from({length: count}, (_, i) => ({ apartment: `Apt ${(i+1).toString().padStart(2,'0')}` }));
+                    const units = Array.from({length: count}, (_, i) => ({ unit_number: `Apt ${(i+1).toString().padStart(2,'0')}` }));
                     const { error } = await window.supabaseClient.from('units').insert(units);
                     if (!error) {
                         document.getElementById('modal-setup-units').classList.remove('active');

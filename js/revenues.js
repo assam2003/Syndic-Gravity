@@ -63,7 +63,7 @@ window.initRevenues = () => {
             .from('units')
             .select(`
                 id,
-                apartment,
+                unit_number,
                 resident_email,
                 payments (
                     amount_paid,
@@ -99,7 +99,7 @@ window.initRevenues = () => {
             tr.dataset.id = res.id;
             tr.innerHTML = `
                 <td>
-                    <div class="apt-badge">${res.apartment}</div>
+                    <div class="apt-badge">${res.unit_number || '?'}</div>
                 </td>
                 <td>
                     <div class="user-desc">
