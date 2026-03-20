@@ -40,14 +40,14 @@ window.initRevenues = () => {
         selectedMonth--;
         if (selectedMonth < 0) { selectedMonth = 11; selectedYear--; }
         updatePeriodLabel();
-        buildView();
+        fetchData();
     });
 
     if (btnNext) btnNext.addEventListener('click', () => {
         selectedMonth++;
         if (selectedMonth > 11) { selectedMonth = 0; selectedYear++; }
         updatePeriodLabel();
-        buildView();
+        fetchData();
     });
 
     // =========================================================================
@@ -63,7 +63,9 @@ window.initRevenues = () => {
         if (unitsErr) { console.error('Units fetch error:', unitsErr); return; }
         allUnits = unitsData || [];
 
-        // 2. Fetch all payments (with unit join)
+        const billingKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+
+        // 2. Fetch all payments (with unit join) filtering by billing month
         const { data: paymentsData, error: payErr } = await window.supabaseClient
             .from('payments')
             .select(`
@@ -71,7 +73,7 @@ window.initRevenues = () => {
                 amount_paid,
                 billing_month,
                 status,
-                payment_date,
+                paid_at,
                 unit_id,
                 units (
                     unit_number,
@@ -79,7 +81,8 @@ window.initRevenues = () => {
                     monthly_fee
                 )
             `)
-            .order('payment_date', { ascending: false });
+            .eq('billing_month', billingKey)
+            .order('paid_at', { ascending: false });
 
         if (payErr) { console.error('Payments fetch error:', payErr); return; }
         localPayments = paymentsData || [];
@@ -97,9 +100,9 @@ window.initRevenues = () => {
         // Match payments for the selected month
         const monthPayments = localPayments.filter(p => {
             if (p.billing_month) return p.billing_month === billingKey;
-            // Fallback: use payment_date
-            if (p.payment_date) {
-                const d = new Date(p.payment_date);
+            // Fallback: use paid_at
+            if (p.paid_at) {
+                const d = new Date(p.paid_at);
                 return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
             }
             return false;
@@ -277,7 +280,7 @@ window.initRevenues = () => {
                 amount_paid: amount,
                 billing_month: billingKey,
                 status: 'paid',
-                payment_date: new Date().toISOString()
+                paid_at: new Date().toISOString()
             });
 
         if (error) {
@@ -314,7 +317,7 @@ window.initRevenues = () => {
     if (btnRemind) {
         btnRemind.onclick = () => {
             const lang = localStorage.getItem('lang') || 'fr';
-            alert(lang === 'fr' ? 'Rappels envoyés aux impayés !' : 'تم إرسال التنبيهات!');
+            console.log(lang === 'fr' ? 'Rappels envoyés aux impayés !' : 'تم إرسال التنبيهات!');
             btnRemind.style.opacity = '0.5';
             btnRemind.disabled = true;
             setTimeout(() => { btnRemind.style.opacity = '1'; btnRemind.disabled = false; }, 3000);
