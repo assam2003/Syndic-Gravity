@@ -1,4 +1,4 @@
-window.initResidents = () => {
+document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('.data-table tbody');
     let localUnits = [];
 
@@ -31,23 +31,22 @@ window.initResidents = () => {
             statsTotalUnits.textContent = localUnits.length;
         }
         if (statsTotalFee) {
-            const sum = localUnits.reduce((acc, unit) => acc + (parseFloat(unit.monthly_fee) || 0), 0);
+            const sum = localUnits.reduce((acc, row) => acc + (parseFloat(row.monthly_fee) || 0), 0);
             statsTotalFee.textContent = sum.toLocaleString('fr-FR');
         }
     };
 
-    const createRow = (unit) => {
-        const fee = parseFloat(unit.monthly_fee || 0).toLocaleString('fr-FR');
-        const unitLabel = unit.unit_number || 'N/A';
-        const ownerLabel = unit.owner_name || 'Inconnu';
-        const initial = ownerLabel.charAt(0).toUpperCase();
+    const createRow = (row) => {
+        const fee = parseFloat(row.monthly_fee || 0).toLocaleString('fr-FR');
+        const initial = (row.owner_name || '?').charAt(0).toUpperCase();
 
         const tr = document.createElement('tr');
-        tr.dataset.id = unit.id;
+        tr.dataset.id = row.id;
         tr.innerHTML = `
             <td>
-                <span class="badge active lang-fr">${unitLabel}</span>
-                <span class="badge active lang-ar hidden">${unitLabel}</span>
+                <!-- STRICT MAPPING TO row.unit_number as requested -->
+                <span class="badge active lang-fr">${row.unit_number || 'N/A'}</span>
+                <span class="badge active lang-ar hidden">${row.unit_number || 'N/A'}</span>
             </td>
             <td>
                 <div class="user-info-row" style="display:flex; align-items:center; gap:12px;">
@@ -55,7 +54,7 @@ window.initResidents = () => {
                         ${initial}
                     </div>
                     <div>
-                        <strong style="color: var(--text-main);">${ownerLabel}</strong>
+                        <strong style="color: var(--text-main);">${row.owner_name || 'Inconnu'}</strong>
                     </div>
                 </div>
             </td>
@@ -72,8 +71,8 @@ window.initResidents = () => {
             </td>
         `;
 
-        tr.querySelector('.btn-edit').addEventListener('click', () => openEditModal(unit));
-        tr.querySelector('.btn-delete').addEventListener('click', () => handleDelete(unit.id, tr));
+        tr.querySelector('.btn-edit').addEventListener('click', () => openEditModal(row));
+        tr.querySelector('.btn-delete').addEventListener('click', () => handleDelete(row.id, tr));
 
         return tr;
     };
@@ -86,7 +85,7 @@ window.initResidents = () => {
             if (window.lucide) lucide.createIcons();
             return;
         }
-        data.forEach(unit => tbody.appendChild(createRow(unit)));
+        data.forEach(row => tbody.appendChild(createRow(row)));
         if (window.lucide) lucide.createIcons();
         if (typeof applyLanguage === 'function') applyLanguage();
     };
@@ -116,9 +115,9 @@ window.initResidents = () => {
     searchInputs.forEach(input => {
         input.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
-            const filtered = localUnits.filter(u =>
-                (u.owner_name && u.owner_name.toLowerCase().includes(query)) ||
-                (u.unit_number && u.unit_number.toLowerCase().includes(query))
+            const filtered = localUnits.filter(row =>
+                (row.owner_name && row.owner_name.toLowerCase().includes(query)) ||
+                (row.unit_number && row.unit_number.toLowerCase().includes(query))
             );
             renderTable(filtered);
         });
@@ -158,7 +157,7 @@ window.initResidents = () => {
         renderTable();
         closeAddModal();
 
-        // --- Background: persist to Supabase ---
+        // --- Background: persist to Supabase using EXACT column names ---
         const { data: inserted, error } = await window.supabaseClient
             .from('units')
             .insert([{ owner_name, unit_number, monthly_fee }])
@@ -174,7 +173,7 @@ window.initResidents = () => {
             return;
         }
 
-        // Replace temp ID with real DB id
+        // Replace temp ID with real DB id from select()
         if (inserted && inserted[0]) {
             const idx = localUnits.findIndex(u => u.id === tempId);
             if (idx > -1) {
@@ -188,14 +187,15 @@ window.initResidents = () => {
     if (formAdd) formAdd.addEventListener('submit', handleAdd);
 
     // --- Edit Logistics ---
-    const openEditModal = (unit) => {
-        currentEditId = unit.id;
+    const openEditModal = (row) => {
+        currentEditId = row.id;
         const editName = document.getElementById('edit-name');
         const editApt = document.getElementById('edit-apt');
         const editFee = document.getElementById('edit-fee');
-        if (editName) editName.value = unit.owner_name || '';
-        if (editApt) editApt.value = unit.unit_number || '';
-        if (editFee) editFee.value = unit.monthly_fee || 0;
+        
+        if (editName) editName.value = row.owner_name || '';
+        if (editApt) editApt.value = row.unit_number || '';
+        if (editFee) editFee.value = row.monthly_fee || 0;
         if (modalEdit) modalEdit.classList.add('active');
     };
     
@@ -271,7 +271,7 @@ window.initResidents = () => {
     if (btnAdd) btnAdd.addEventListener('click', openAddModal);
     if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
     btnCancelAdds.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); closeAddModal(); }));
-    // Also bind save buttons as click handlers (in case form submit doesn't fire)
+    // Bind fallback clicks to save button logic
     btnSaveAdds.forEach(b => b.addEventListener('click', (e) => {
         e.preventDefault();
         handleAdd(e);
@@ -284,13 +284,7 @@ window.initResidents = () => {
         handleEditSave(e);
     });
 
-    // Bootstrap
+    // START FETCH IMMEDIATELY OUTSIDE ANY WINDOW/FUNCTION DECLARATION
     fetchUnits();
-};
-
-document.addEventListener('DOMContentLoaded', window.initResidents);
-document.addEventListener('spa:pageLoaded', () => {
-    if (window.location.pathname.includes('residents.html')) {
-        window.initResidents();
-    }
-});
+    
+}); // END DOMContentLoaded
