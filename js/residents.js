@@ -15,11 +15,13 @@ window.initResidents = () => {
     const btnCloseAdd = document.getElementById('btn-close-modal');
     const btnCancelAdds = document.querySelectorAll('#btn-cancel-modal, #btn-cancel-modal-ar');
     const btnSaveAdds = document.querySelectorAll('#btn-save-resident, #btn-save-resident-ar');
+    const formAdd = document.getElementById('form-add-resident');
 
     const modalEdit = document.getElementById('modal-edit-resident');
     const btnCloseEdit = document.getElementById('btn-close-edit-modal');
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
     const btnSaveEdit = document.getElementById('btn-save-edit');
+    const formEdit = document.getElementById('form-edit-resident');
 
     let currentEditId = null;
 
@@ -36,20 +38,24 @@ window.initResidents = () => {
 
     const createRow = (unit) => {
         const fee = parseFloat(unit.monthly_fee || 0).toLocaleString('fr-FR');
+        const unitLabel = unit.unit_number || 'N/A';
+        const ownerLabel = unit.owner_name || 'Inconnu';
+        const initial = ownerLabel.charAt(0).toUpperCase();
+
         const tr = document.createElement('tr');
         tr.dataset.id = unit.id;
         tr.innerHTML = `
             <td>
-                <span class="badge active lang-fr">${unit.unit_number || 'N/A'}</span>
-                <span class="badge active lang-ar hidden">${unit.unit_number || 'N/A'}</span>
+                <span class="badge active lang-fr">${unitLabel}</span>
+                <span class="badge active lang-ar hidden">${unitLabel}</span>
             </td>
             <td>
                 <div class="user-info-row" style="display:flex; align-items:center; gap:12px;">
                     <div class="avatar-sm" style="width:32px; height:32px; border-radius:50%; background:var(--gradient-accent, #4F46E5); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:0.8rem; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);">
-                        ${(unit.owner_name || '?').charAt(0).toUpperCase()}
+                        ${initial}
                     </div>
                     <div>
-                        <strong style="color: var(--text-main);">${unit.owner_name || 'Inconnu'}</strong>
+                        <strong style="color: var(--text-main);">${ownerLabel}</strong>
                     </div>
                 </div>
             </td>
@@ -77,6 +83,7 @@ window.initResidents = () => {
         tbody.innerHTML = '';
         if (data.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="padding: 32px; color: var(--text-muted);"><i data-lucide="users" style="opacity:0.3; width:32px; height:32px; margin-bottom:12px;"></i><br><span class="lang-fr">Aucun propriétaire trouvé</span><span class="lang-ar hidden">لم يتم العثور على ملاك</span></td></tr>`;
+            if (window.lucide) lucide.createIcons();
             return;
         }
         data.forEach(unit => tbody.appendChild(createRow(unit)));
@@ -95,7 +102,7 @@ window.initResidents = () => {
             .order('unit_number', { ascending: true });
 
         if (error) {
-            console.error(error);
+            console.error('Fetch units error:', error);
             tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger" style="padding: 24px;">Erreur de chargement des données.</td></tr>`;
             return;
         }
@@ -119,8 +126,8 @@ window.initResidents = () => {
 
     // --- Add Logistics ---
     const openAddModal = () => {
-        document.getElementById('form-add-resident').reset();
-        modalAdd.classList.add('active');
+        if (formAdd) formAdd.reset();
+        if (modalAdd) modalAdd.classList.add('active');
     };
     
     const closeAddModal = () => {
@@ -128,43 +135,67 @@ window.initResidents = () => {
     };
 
     const handleAdd = async (e) => {
-        e.preventDefault();
-        const owner_name = document.getElementById('input-name').value.trim();
-        const unit_number = document.getElementById('input-apt').value.trim();
-        const fee = parseFloat(document.getElementById('input-fee').value);
+        if (e) e.preventDefault();
 
-        if (!owner_name || !unit_number || isNaN(fee)) {
+        const nameInput = document.getElementById('input-name');
+        const aptInput = document.getElementById('input-apt');
+        const feeInput = document.getElementById('input-fee');
+
+        const owner_name = (nameInput?.value || '').trim();
+        const unit_number = (aptInput?.value || '').trim();
+        const monthly_fee = parseFloat(feeInput?.value);
+
+        if (!owner_name || !unit_number || isNaN(monthly_fee)) {
             alert("Veuillez remplir tous les champs correctement.");
             return;
         }
 
-        // --- Optimistic UI ---
+        // --- Optimistic UI: instant local update ---
         const tempId = 'temp-' + Date.now();
-        const newUnit = { id: tempId, owner_name, unit_number, monthly_fee: fee };
+        const newUnit = { id: tempId, owner_name, unit_number, monthly_fee };
         localUnits.push(newUnit);
-        
         updateMetrics();
         renderTable();
         closeAddModal();
 
         // --- Background: persist to Supabase ---
-        const payload = { owner_name, unit_number, monthly_fee: fee };
-        
-        const { error } = await window.supabaseClient.from('units').insert([payload]);
+        const { data: inserted, error } = await window.supabaseClient
+            .from('units')
+            .insert([{ owner_name, unit_number, monthly_fee }])
+            .select();
+
         if (error) {
+            console.error('Insert error:', error);
             alert('Erreur: ' + error.message);
+            // Revert: remove optimistic entry
+            localUnits = localUnits.filter(u => u.id !== tempId);
+            updateMetrics();
+            renderTable();
+            return;
         }
-        
-        // Final Background re-sync to fetch proper real database IDs
-        fetchUnits();
+
+        // Replace temp ID with real DB id
+        if (inserted && inserted[0]) {
+            const idx = localUnits.findIndex(u => u.id === tempId);
+            if (idx > -1) {
+                localUnits[idx] = inserted[0];
+                renderTable();
+            }
+        }
     };
+
+    // Prevent form default submit (which causes page reload)
+    if (formAdd) formAdd.addEventListener('submit', handleAdd);
 
     // --- Edit Logistics ---
     const openEditModal = (unit) => {
         currentEditId = unit.id;
-        document.getElementById('edit-name').value = unit.owner_name || '';
-        document.getElementById('edit-apt').value = unit.unit_number || '';
-        document.getElementById('edit-fee').value = unit.monthly_fee || 0;
+        const editName = document.getElementById('edit-name');
+        const editApt = document.getElementById('edit-apt');
+        const editFee = document.getElementById('edit-fee');
+        if (editName) editName.value = unit.owner_name || '';
+        if (editApt) editApt.value = unit.unit_number || '';
+        if (editFee) editFee.value = unit.monthly_fee || 0;
         if (modalEdit) modalEdit.classList.add('active');
     };
     
@@ -174,44 +205,41 @@ window.initResidents = () => {
     };
 
     const handleEditSave = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!currentEditId) return;
 
-        const owner_name = document.getElementById('edit-name').value.trim();
-        const unit_number = document.getElementById('edit-apt').value.trim();
-        const fee = parseFloat(document.getElementById('edit-fee').value);
-        if (!owner_name || !unit_number || isNaN(fee)) return alert("Champs invalides.");
+        const owner_name = (document.getElementById('edit-name')?.value || '').trim();
+        const unit_number = (document.getElementById('edit-apt')?.value || '').trim();
+        const monthly_fee = parseFloat(document.getElementById('edit-fee')?.value);
+
+        if (!owner_name || !unit_number || isNaN(monthly_fee)) {
+            alert("Champs invalides.");
+            return;
+        }
 
         // --- Optimistic UI ---
         const index = localUnits.findIndex(u => u.id === currentEditId);
         if (index > -1) {
-            localUnits[index] = { ...localUnits[index], owner_name, unit_number, monthly_fee: fee };
+            localUnits[index] = { ...localUnits[index], owner_name, unit_number, monthly_fee };
             updateMetrics();
-            
-            // Replace specifically the edited row to prevent full table flicker
-            const row = tbody.querySelector(`tr[data-id="${currentEditId}"]`);
-            if (row) {
-                row.replaceWith(createRow(localUnits[index]));
-                if (window.lucide) lucide.createIcons();
-                if (typeof applyLanguage === 'function') applyLanguage();
-            } else {
-                renderTable(); // Fallback
-            }
+            renderTable();
         }
         closeEditModal();
 
         // --- Background persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('units')
-            .update({ owner_name, unit_number, monthly_fee: fee })
+            .update({ owner_name, unit_number, monthly_fee })
             .eq('id', currentEditId);
 
         if (error) {
+            console.error('Update error:', error);
             alert('Erreur: ' + error.message);
-            // Revert changes on error
-            fetchUnits();
+            fetchUnits(); // revert
         }
     };
+
+    if (formEdit) formEdit.addEventListener('submit', handleEditSave);
 
     // --- Delete Logistics ---
     const handleDelete = async (id, rowElement) => {
@@ -231,24 +259,32 @@ window.initResidents = () => {
             rowElement.style.opacity = '1';
             rowElement.style.pointerEvents = 'auto';
         } else {
-            // Success - remove from local array and completely from DOM
             localUnits = localUnits.filter(u => u.id !== id);
             updateMetrics();
             rowElement.remove();
+            // Show empty state if needed
+            if (localUnits.length === 0) renderTable();
         }
     };
 
-    // --- Event Listeners hooks ---
+    // --- Event Listeners ---
     if (btnAdd) btnAdd.addEventListener('click', openAddModal);
     if (btnCloseAdd) btnCloseAdd.addEventListener('click', closeAddModal);
     btnCancelAdds.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); closeAddModal(); }));
-    btnSaveAdds.forEach(b => b.addEventListener('click', handleAdd));
+    // Also bind save buttons as click handlers (in case form submit doesn't fire)
+    btnSaveAdds.forEach(b => b.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleAdd(e);
+    }));
 
     if (btnCloseEdit) btnCloseEdit.addEventListener('click', closeEditModal);
     if (btnCancelEdit) btnCancelEdit.addEventListener('click', (e) => { e.preventDefault(); closeEditModal(); });
-    if (btnSaveEdit) btnSaveEdit.addEventListener('click', handleEditSave);
+    if (btnSaveEdit) btnSaveEdit.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleEditSave(e);
+    });
 
-    // Bootstrap data fetch on load
+    // Bootstrap
     fetchUnits();
 };
 
