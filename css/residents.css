@@ -48,13 +48,22 @@ body[dir="rtl"] .search-box i {
     margin-left: 12px; /* RTL */
 }
 
-.search-box input {
-    border: none;
-    background: transparent;
-    outline: none;
-    color: var(--text-main);
+.search-box input,
+.search-box input:focus,
+.search-box input:active,
+.search-box input:-webkit-autofill,
+.search-box input:-webkit-autofill:hover, 
+.search-box input:-webkit-autofill:focus, 
+.search-box input:-webkit-autofill:active {
+    border: none !important;
+    background-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+    color: var(--text-main) !important;
     font-size: 0.95rem;
     width: 100%;
+    -webkit-text-fill-color: var(--text-main) !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .search-box input::placeholder {
