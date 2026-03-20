@@ -122,6 +122,15 @@
                             <span class="user-name">Admin Syndic</span>
                             <span class="user-role">Gestionnaire</span>
                         </div>
+                        <i data-lucide="chevron-down" style="width:16px;height:16px;color:var(--text-muted);"></i>
+                        <!-- User Dropdown -->
+                        <div class="user-dropdown" id="user-dropdown">
+                            <button class="dropdown-item" id="btn-logout">
+                                <i data-lucide="log-out"></i>
+                                <span class="lang-fr">Déconnexion</span>
+                                <span class="lang-ar hidden">تسجيل الخروج</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -209,57 +218,18 @@
                                             <span class="lang-fr">Appartement</span>
                                             <span class="lang-ar hidden">الشقة</span>
                                         </th>
+                                        <th>
+                                            <span class="lang-fr">Statut</span>
+                                            <span class="lang-ar hidden">الحالة</span>
+                                        </th>
                                         <th class="text-right">
                                             <span class="lang-fr">Montant</span>
                                             <span class="lang-ar hidden">المبلغ</span>
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>10 Mars 2026</td>
-                                        <td>
-                                            <div class="tx-desc">
-                                                <div class="tx-icon add"><i data-lucide="plus"></i></div>
-                                                <span>Cotisation Mensuelle</span>
-                                            </div>
-                                        </td>
-                                        <td>Apt 12 - M. Alaoui</td>
-                                        <td class="text-right text-success">+ 400 MAD</td>
-                                    </tr>
-                                    <tr>
-                                        <td>8 Mars 2026</td>
-                                        <td>
-                                            <div class="tx-desc">
-                                                <div class="tx-icon add"><i data-lucide="plus"></i></div>
-                                                <span>Fonds Réparation Ascenseur</span>
-                                            </div>
-                                        </td>
-                                        <td>Apt 05 - Mme. Bennani</td>
-                                        <td class="text-right text-success">+ 1000 MAD</td>
-                                    </tr>
-                                    <tr>
-                                        <td>5 Mars 2026</td>
-                                        <td>
-                                            <div class="tx-desc">
-                                                <div class="tx-icon sub"><i data-lucide="minus"></i></div>
-                                                <span>Facture Électricité (Redal)</span>
-                                            </div>
-                                        </td>
-                                        <td>-</td>
-                                        <td class="text-right text-danger">- 850 MAD</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2 Mars 2026</td>
-                                        <td>
-                                            <div class="tx-desc">
-                                                <div class="tx-icon sub"><i data-lucide="minus"></i></div>
-                                                <span>Société de Nettoyage</span>
-                                            </div>
-                                        </td>
-                                        <td>-</td>
-                                        <td class="text-right text-danger">- 1500 MAD</td>
-                                    </tr>
+                                <tbody id="recent-operations-tbody">
+                                    <!-- Dynamic rows injected by app.js -->
                                 </tbody>
                             </table>
                         </div>

@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+window.initRevenues = () => {
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // Search
@@ -13,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modal-add-revenue');
     const inputApt = document.getElementById('rev-apt');
     const inputAmount = document.getElementById('rev-amount');
+
+    if (!modal && !document.getElementById('revenues-tbody')) return;
 
     // Buttons Close
     const btnClose = document.getElementById('btn-close-revenue');
@@ -47,7 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     searchInputs.forEach(input => {
-        if (input) input.addEventListener('input', performSearch);
+        if (input) {
+            input.removeEventListener('input', performSearch);
+            input.addEventListener('input', performSearch);
+        }
     });
 
     // --- Supabase Integration ---
@@ -55,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentMonth = new Date().getMonth() + 1; // 1-12
 
     const fetchCotisations = async () => {
-        // Fetch residents and their cotisations for current month/year
         const { data: unitsData, error: resError } = await window.supabaseClient
             .from('units')
             .select(`
@@ -74,14 +77,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderRevenues(unitsData);
+        updateSummaryCards(unitsData);
     };
 
     const renderRevenues = (unitsData) => {
         const tbody = document.getElementById('revenues-tbody');
+        if (!tbody) return;
         tbody.innerHTML = '';
 
         unitsData.forEach(res => {
-            // Filter payments for current month/year manually since nested filtering requires specific syntax
             const currentMonthPayments = res.payments ? res.payments.filter(p => {
                 const pd = new Date(p.payment_date);
                 return pd.getMonth() + 1 === currentMonth && pd.getFullYear() === currentYear;
@@ -138,31 +142,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.lucide) lucide.createIcons();
     };
 
-    // Opening Modal
     const openModal = (aptName, row) => {
         if (userRole === 'syndic') {
             currentRowToUpdate = row;
-            inputApt.value = aptName;
-            modal.classList.add('active');
-            inputAmount.focus();
+            if (inputApt) inputApt.value = aptName;
+            if (modal) modal.classList.add('active');
+            if (inputAmount) inputAmount.focus();
         }
     };
 
     const closeModal = () => {
-        modal.classList.remove('active');
-        document.getElementById('form-add-revenue').reset();
+        if (modal) modal.classList.remove('active');
+        const revForm = document.getElementById('form-add-revenue');
+        if (revForm) revForm.reset();
         currentRowToUpdate = null;
     };
 
-    // Attach click event to Encasser buttons
     const attachPaymentButtons = () => {
-        const payBtns = document.querySelectorAll('.mark-paid-btn');
-        payBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+            btn.onclick = (e) => {
                 const tr = e.target.closest('tr');
                 const aptName = tr.querySelector('.apt-badge').textContent.trim();
                 openModal(aptName, tr);
-            });
+            };
         });
     };
 
@@ -172,26 +174,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (modal) {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
+            if (e.target === modal) closeModal();
         });
     }
 
-    // Save Payment to Supabase
+    const updateSummaryCards = (unitsData) => {
+        const monthlyFee = 400;
+        const totalExpected = (unitsData || []).length * monthlyFee;
+        let totalCollected = 0;
+
+        (unitsData || []).forEach(res => {
+            const currentMonthPayments = res.payments ? res.payments.filter(p => {
+                const pd = new Date(p.payment_date);
+                return pd.getMonth() + 1 === currentMonth && pd.getFullYear() === currentYear;
+            }) : [];
+            if (currentMonthPayments.length > 0) {
+                totalCollected += parseFloat(currentMonthPayments[0].amount_paid) || monthlyFee;
+            }
+        });
+
+        const remaining = totalExpected - totalCollected;
+
+        // Update the summary card values in the DOM
+        const summaryVals = document.querySelectorAll('.summary-val');
+        if (summaryVals.length >= 3) {
+            summaryVals[0].innerHTML = `${totalExpected.toLocaleString('fr-FR')} <span class="text-sm" style="color: rgba(255,255,255,0.7)">MAD</span>`;
+            summaryVals[1].innerHTML = `${totalCollected.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
+            summaryVals[2].innerHTML = `${remaining.toLocaleString('fr-FR')} <span class="text-sm">MAD</span>`;
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
-        
         if (!currentRowToUpdate) return;
-        
         const amount = inputAmount.value;
         const residentId = currentRowToUpdate.dataset.id;
-        
         if (!amount || amount <= 0) {
             alert("Montant invalide");
             return;
         }
 
+        // --- Optimistic UI: update the row immediately ---
+        const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        const statusCell = currentRowToUpdate.querySelector('td:nth-child(4)');
+        const actionCell = currentRowToUpdate.querySelector('td:nth-child(5)');
+        if (statusCell) {
+            statusCell.innerHTML = `
+                <span class="badge paid lang-fr"><i data-lucide="check" class="icon-xs"></i> Payé le ${today}</span>
+                <span class="badge paid lang-ar hidden"><i data-lucide="check" class="icon-xs"></i> دُفِع في ${today}</span>
+            `;
+        }
+        if (actionCell) {
+            actionCell.innerHTML = `
+                <button class="btn-icon-soft" disabled style="opacity:0.5"><i data-lucide="check-circle-2"></i></button>
+                <button class="btn-icon-soft" title="Historique"><i data-lucide="history"></i></button>
+            `;
+        }
+        if (window.lucide) lucide.createIcons();
+        closeModal();
+
+        // --- Background: persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('payments')
             .insert({
@@ -202,28 +244,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (error) {
             alert('Error: ' + error.message);
+            // Revert by re-fetching
+            fetchCotisations();
             return;
         }
 
-        fetchCotisations(); // Refresh list
-        closeModal();
+        // Background re-sync to keep summary cards accurate
+        fetchCotisations();
     };
 
-    // Initial fetch
-    fetchCotisations();
+    if (btnSave) btnSave.addEventListener('click', handleSave);
+    if (btnSaveAr) btnSaveAr.addEventListener('click', handleSave);
 
-    [btnSave, btnSaveAr].forEach(btn => {
-        if (btn) btn.addEventListener('click', handleSave);
-    });
-
-    // Alert Reminder Button
     const btnRemind = document.getElementById('btn-remind-all');
     if (btnRemind) {
-        btnRemind.addEventListener('click', () => {
+        btnRemind.onclick = () => {
             const currentLang = localStorage.getItem('lang') || 'fr';
-            alert(currentLang === 'fr' ? 'Rappels envoyés aux 1 retardataires avec succès !' : 'تم إرسال تذكير إلى 1 شخص متأخر بنجاح!');
+            alert(currentLang === 'fr' ? 'Rappels envoyés !' : 'تم إرسال التنبيهات!');
             btnRemind.style.opacity = '0.5';
             btnRemind.disabled = true;
-        });
+        };
+    }
+
+    fetchCotisations();
+};
+
+document.addEventListener('DOMContentLoaded', window.initRevenues);
+document.addEventListener('spa:pageLoaded', () => {
+    if (window.location.pathname.includes('revenues.html')) {
+        window.initRevenues();
     }
 });

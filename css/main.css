@@ -237,6 +237,72 @@ body[dir="rtl"] .user-profile {
     color: var(--text-muted);
 }
 
+/* User Profile Dropdown */
+.user-profile {
+    cursor: pointer;
+    position: relative;
+}
+
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-panel-solid);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    z-index: 200;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.96);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body[dir="rtl"] .user-dropdown {
+    right: auto;
+    left: 0;
+}
+
+.user-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.user-dropdown .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--danger);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+}
+
+body[dir="rtl"] .user-dropdown .dropdown-item {
+    text-align: right;
+}
+
+.user-dropdown .dropdown-item i {
+    width: 18px;
+    height: 18px;
+    color: var(--danger);
+    flex-shrink: 0;
+}
+
+.user-dropdown .dropdown-item:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
 /* Dashboard Metrics */
 .dashboard-wrapper {
     display: flex;

@@ -1,5 +1,7 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+window.initResidents = () => {
+    // Prevent multiple event listeners by clearing existing ones if possible 
+    // or ensuring this function is idempotent.
+    
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // --- DOM Elements for Search ---
@@ -33,6 +35,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let editingRow = null; // track which row is being edited
 
+    if (!modal && !editModal) return; // Not on residents page
+
     // --- Search functionality ---
     const performSearch = (e) => {
         const query = e.target.value.toLowerCase();
@@ -55,7 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     searchInputs.forEach(input => {
-        if (input) input.addEventListener('input', performSearch);
+        if (input) {
+            input.removeEventListener('input', performSearch);
+            input.addEventListener('input', performSearch);
+        }
     });
 
     // --- Supabase Integration Functions ---
@@ -75,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderResidents = (residents) => {
         const tbody = document.querySelector('.data-table tbody');
+        if (!tbody) return;
         tbody.innerHTML = ''; // Clear existing rows
 
         residents.forEach(res => {
@@ -126,13 +134,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const openModal = () => {
         if (userRole === 'syndic') {
             modal.classList.add('active');
-            document.getElementById('input-name').focus();
+            const nameInput = document.getElementById('input-name');
+            if (nameInput) nameInput.focus();
         }
     };
 
     const closeModal = () => {
-        modal.classList.remove('active');
-        form.reset();
+        if (modal) {
+            modal.classList.remove('active');
+            if (form) form.reset();
+        }
     };
 
     if (btnAdd) btnAdd.addEventListener('click', openModal);
@@ -141,12 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) btn.addEventListener('click', closeModal);
     });
 
-    // Close on overlay click
     if (modal) {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
+            if (e.target === modal) closeModal();
         });
     }
 
@@ -154,86 +162,54 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleSave = async (e) => {
         e.preventDefault();
 
-        // Get values
         const name = document.getElementById('input-name').value;
         const apt = document.getElementById('input-apt').value;
         const phone = document.getElementById('input-phone').value;
         const type = document.getElementById('input-type').value;
 
         if (!name || !apt) {
-            alert('Veuillez remplir le nom et l\'appartement. / يرجى ملء الاسم والشقة.');
+            alert('Veuillez remplir le nom et l\'appartement.');
             return;
         }
 
-        // --- Save to Supabase ---
+        // --- Optimistic UI: add row immediately ---
+        const tempRow = createResidentRow({ id: 'temp-' + Date.now(), name, apartment: apt, phone, type, resident_email: null });
+        const tbody = document.querySelector('.data-table tbody');
+        if (tbody) tbody.appendChild(tempRow);
+        if (window.lucide) lucide.createIcons();
+        closeModal();
+
+        // --- Background: persist to Supabase ---
         const { data, error } = await window.supabaseClient
             .from('units')
-            .insert([
-                { name, apartment: apt, phone, type, status: 'À jour' }
-            ])
+            .insert([{ name, apartment: apt, phone, type, status: 'À jour' }])
             .select();
 
         if (error) {
-            alert('Error saving to Supabase: ' + error.message);
-            return;
+            alert('Error saving: ' + error.message);
         }
 
-        // --- Update UI ---
-        const tbody = document.querySelector('.data-table tbody');
-        const newRow = createResidentRow(data[0]);
-        tbody.insertBefore(newRow, tbody.firstChild);
-
-        // Re-init lucide icons
-        if (window.lucide) lucide.createIcons();
-        
-        // Language sync
-        const currentLang = localStorage.getItem('lang') || 'fr';
-        if (currentLang === 'ar') {
-            newRow.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
-            newRow.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
-        }
-
-        tableRows = document.querySelectorAll('.data-table tbody tr');
-        attachEditListeners();
-        closeModal();
+        // Re-sync from Supabase to get real IDs
+        fetchResidents();
     };
-
-    // Fetch initial data
-    fetchResidents();
-    document.addEventListener('unitsCreated', fetchResidents);
 
     [btnSave, btnSaveAr].forEach(btn => {
         if (btn) btn.addEventListener('click', handleSave);
     });
 
-    // ═══════════════════════════════════════
-    //  EDIT MODAL FUNCTIONALITY
-    // ═══════════════════════════════════════
-
     const openEditModal = (row) => {
         editingRow = row;
-
-        // Extract current values from the row
         const aptBadge = row.querySelector('.apt-badge');
         const nameEl = row.querySelector('.user-desc strong');
-        const typeEl = row.querySelector('.user-desc .text-sm');
         const phoneEl = row.querySelector('.contact-info span');
+        const typeEl = row.querySelector('.user-desc .text-sm');
 
-        // Fill edit form
-        document.getElementById('edit-apt').value = aptBadge ? aptBadge.textContent.trim() : '';
-        document.getElementById('edit-name').value = nameEl ? nameEl.textContent.trim() : '';
-        
-        // Extract phone number (remove the icon text)
-        if (phoneEl) {
-            const phoneText = phoneEl.textContent.trim();
-            document.getElementById('edit-phone').value = phoneText;
-        } else {
-            document.getElementById('edit-phone').value = '';
-        }
+        if (document.getElementById('edit-apt')) document.getElementById('edit-apt').value = aptBadge ? aptBadge.textContent.trim() : '';
+        if (document.getElementById('edit-name')) document.getElementById('edit-name').value = nameEl ? nameEl.textContent.trim() : '';
+        if (document.getElementById('edit-phone')) document.getElementById('edit-phone').value = phoneEl ? phoneEl.textContent.trim() : '';
 
-        // Set the type dropdown
         const typeSelect = document.getElementById('edit-type');
-        if (typeEl) {
+        if (typeSelect && typeEl) {
             const typeText = typeEl.textContent.trim();
             for (let i = 0; i < typeSelect.options.length; i++) {
                 if (typeSelect.options[i].value === typeText || typeSelect.options[i].text === typeText) {
@@ -243,116 +219,72 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Show the modal
         editModal.classList.add('active');
-        document.getElementById('edit-name').focus();
-
-        // Apply current language to modal
-        const currentLang = localStorage.getItem('lang') || 'fr';
-        if (currentLang === 'ar') {
-            editModal.querySelectorAll('.lang-fr').forEach(el => el.classList.add('hidden'));
-            editModal.querySelectorAll('.lang-ar').forEach(el => el.classList.remove('hidden'));
-        } else {
-            editModal.querySelectorAll('.lang-ar').forEach(el => el.classList.add('hidden'));
-            editModal.querySelectorAll('.lang-fr').forEach(el => el.classList.remove('hidden'));
-        }
-
-        if (window.lucide) lucide.createIcons();
+        if (document.getElementById('edit-name')) document.getElementById('edit-name').focus();
     };
 
     const closeEditModal = () => {
-        editModal.classList.remove('active');
-        editForm.reset();
-        editingRow = null;
+        if (editModal) {
+            editModal.classList.remove('active');
+            if (editForm) editForm.reset();
+            editingRow = null;
+        }
     };
 
     const handleEditSave = async () => {
         if (!editingRow) return;
-
         const id = editingRow.dataset.id;
         const newName = document.getElementById('edit-name').value.trim();
         const newApt = document.getElementById('edit-apt').value.trim();
         const newPhone = document.getElementById('edit-phone').value.trim();
         const newType = document.getElementById('edit-type').value;
 
-        if (!newName || !newApt) {
-            alert('Veuillez remplir le nom et l\'appartement. / يرجى ملء الاسم والشقة.');
-            return;
-        }
+        // --- Optimistic UI: update DOM immediately ---
+        const aptBadge = editingRow.querySelector('.apt-badge');
+        const nameEl = editingRow.querySelector('.user-desc strong');
+        const phoneEl = editingRow.querySelector('.contact-info span');
+        const typeEl = editingRow.querySelector('.user-desc .text-sm');
+        if (aptBadge) aptBadge.textContent = newApt;
+        if (nameEl) nameEl.textContent = newName;
+        if (phoneEl) phoneEl.textContent = newPhone;
+        if (typeEl) typeEl.textContent = newType;
+        closeEditModal();
 
-        // --- Update Supabase ---
+        // --- Background: persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('units')
             .update({ name: newName, apartment: newApt, phone: newPhone, type: newType })
             .eq('id', id);
 
         if (error) {
-            alert('Error updating Supabase: ' + error.message);
-            return;
+            alert('Error: ' + error.message);
+            // Revert by re-fetching
+            fetchResidents();
         }
-
-        // Update the row in place
-        const aptBadge = editingRow.querySelector('.apt-badge');
-        const nameEl = editingRow.querySelector('.user-desc strong');
-        const typeEl = editingRow.querySelector('.user-desc .text-sm');
-        const contactInfo = editingRow.querySelector('.contact-info');
-
-        if (aptBadge) aptBadge.textContent = newApt;
-        if (nameEl) nameEl.textContent = newName;
-        if (typeEl) typeEl.textContent = newType;
-        
-        if (contactInfo) {
-            const phoneSpan = contactInfo.querySelector('span');
-            if (phoneSpan) {
-                phoneSpan.innerHTML = `<i data-lucide="phone" class="icon-sm"></i> ${newPhone || '-'}`;
-            }
-        }
-
-        // Add a brief highlight animation
-        editingRow.style.transition = 'background 0.5s ease';
-        editingRow.style.background = 'rgba(79, 70, 229, 0.15)';
-        setTimeout(() => {
-            editingRow.style.background = '';
-        }, 1500);
-
-        if (window.lucide) lucide.createIcons();
-        closeEditModal();
     };
 
-    // Close edit modal
     [btnCloseEdit, btnCancelEdit].forEach(btn => {
         if (btn) btn.addEventListener('click', closeEditModal);
     });
-
-    // Save edit
     if (btnSaveEdit) btnSaveEdit.addEventListener('click', handleEditSave);
 
-    // Close on overlay click
-    if (editModal) {
-        editModal.addEventListener('click', (e) => {
-            if (e.target === editModal) {
-                closeEditModal();
-            }
-        });
-    }
-
-    // Attach edit listeners to all edit buttons
     const attachEditListeners = () => {
         document.querySelectorAll('.btn-edit-resident').forEach(btn => {
-            // Remove old listeners by cloning
-            const newBtn = btn.cloneNode(true);
-            btn.parentNode.replaceChild(newBtn, btn);
-            
-            newBtn.addEventListener('click', () => {
-                const row = newBtn.closest('tr');
+            btn.onclick = () => {
+                const row = btn.closest('tr');
                 if (row) openEditModal(row);
-            });
+            };
         });
-
-        // Re-init lucide icons for cloned buttons
-        if (window.lucide) lucide.createIcons();
     };
 
-    // Initial attachment
-    attachEditListeners();
+    fetchResidents();
+};
+
+// Initial run
+document.addEventListener('DOMContentLoaded', window.initResidents);
+// SPA support
+document.addEventListener('spa:pageLoaded', () => {
+    if (window.location.pathname.includes('residents.html')) {
+        window.initResidents();
+    }
 });

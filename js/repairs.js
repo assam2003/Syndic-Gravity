@@ -1,5 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
-
+window.initRepairs = () => {
     const userRole = localStorage.getItem('userRole') || 'resident';
 
     // Search
@@ -13,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('modal-add-project');
     const btnAdd = document.getElementById('btn-add-project');
 
+    if (!modal && !document.querySelector('.projects-grid')) return;
+
     // Closer buttons
     const btnClose = document.getElementById('btn-close-project');
     const btnCancel = document.getElementById('btn-cancel-project');
@@ -22,53 +23,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSave = document.getElementById('btn-save-project');
     const btnSaveAr = document.getElementById('btn-save-project-ar');
 
-    // Detail View Logic in Global Scope
+    // Detail View Logic in Global Scope (Keep it global for simple onclick handlers in templates)
     window.openDetailView = (projectName, partAmount) => {
-        document.getElementById('projects-view').style.display = 'none';
-        document.getElementById('detail-view').classList.add('active');
+        const projView = document.getElementById('projects-view');
+        const detailView = document.getElementById('detail-view');
         
-        // Set titles
-        document.getElementById('project-name-display-fr').textContent = projectName;
-        document.getElementById('project-name-display-ar').textContent = projectName;
+        if (projView) projView.style.display = 'none';
+        if (detailView) detailView.classList.add('active');
         
-        // Set calculated part
-        document.getElementById('project-part-fr').textContent = partAmount;
-        document.getElementById('project-part-ar').textContent = partAmount;
+        const titleFr = document.getElementById('project-name-display-fr');
+        const titleAr = document.getElementById('project-name-display-ar');
+        if (titleFr) titleFr.textContent = projectName;
+        if (titleAr) titleAr.textContent = projectName;
+        
+        const partFr = document.getElementById('project-part-fr');
+        const partAr = document.getElementById('project-part-ar');
+        if (partFr) partFr.textContent = partAmount;
+        if (partAr) partAr.textContent = partAmount;
 
-        // Set parts in table column
-        const partCells = document.querySelectorAll('.display-part');
-        partCells.forEach(cell => {
+        document.querySelectorAll('.display-part').forEach(cell => {
             cell.innerHTML = `<strong>${partAmount} MAD</strong>`;
         });
     };
 
     window.closeDetailView = () => {
-        document.getElementById('detail-view').classList.remove('active');
-        document.getElementById('projects-view').style.display = 'block';
+        const detailView = document.getElementById('detail-view');
+        const projView = document.getElementById('projects-view');
+        if (detailView) detailView.classList.remove('active');
+        if (projView) projView.style.display = 'block';
     };
 
     // Search logic
     const performSearch = (e) => {
         const query = e.target.value.toLowerCase();
-
         projectCards.forEach(card => {
-            const textContent = card.textContent.toLowerCase();
-            if (textContent.includes(query)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+            card.style.display = card.textContent.toLowerCase().includes(query) ? 'block' : 'none';
         });
-
         searchInputs.forEach(input => {
-            if (input && input !== e.target) {
-                input.value = e.target.value;
-            }
+            if (input && input !== e.target) input.value = e.target.value;
         });
     };
 
     searchInputs.forEach(input => {
-        if (input) input.addEventListener('input', performSearch);
+        if (input) {
+            input.removeEventListener('input', performSearch);
+            input.addEventListener('input', performSearch);
+        }
     });
 
     // --- Supabase Integration ---
@@ -82,12 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error:', error);
             return;
         }
-
         renderProjects(data);
     };
 
     const renderProjects = (projects) => {
         const grid = document.querySelector('.projects-grid');
+        if (!grid) return;
         grid.innerHTML = '';
 
         projects.forEach(proj => {
@@ -119,16 +119,13 @@ document.addEventListener('DOMContentLoaded', () => {
         div.dataset.id = proj.id;
         div.innerHTML = `
             <div class="repair-header">
-                <div class="repair-icon">
-                    <i data-lucide="folder"></i>
-                </div>
+                <div class="repair-icon"><i data-lucide="folder"></i></div>
                 <span class="status ${proj.status === 'Planifié' ? 'pending' : 'active'}">
                    <span class="lang-fr">${proj.status}</span>
                 </span>
             </div>
             <h3 class="repair-title">${proj.title}</h3>
             <p class="repair-desc">${proj.description || ''}</p>
-            
             <div class="repair-stats">
                 <div class="stat-item">
                     <span class="stat-label">Budget Total</span>
@@ -139,58 +136,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="stat-value collected">${collectedFormatted} MAD</span>
                 </div>
             </div>
-
             <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${percent}%; background: var(--warning);"></div>
-                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: ${percent}%; background: var(--warning);"></div></div>
                 <div class="progress-text">
                     <span>${percent}% collecté</span>
                     <span>Reste: ${new Intl.NumberFormat('fr-FR').format(budget - collected)} MAD</span>
                 </div>
             </div>
-
             <div class="repair-actions">
                 <button class="btn-view" onclick="openDetailView('${proj.title}', '${partAmount}')">
-                    <i data-lucide="eye"></i>
-                    <span>Gérer les Cotisations</span>
+                    <i data-lucide="eye"></i><span>Gérer les Cotisations</span>
                 </button>
             </div>
         `;
         return div;
     };
 
-    // Opening Modal
     const openModal = () => {
-        if (userRole === 'syndic') {
+        if (userRole === 'syndic' && modal) {
             modal.classList.add('active');
-            document.getElementById('project-title').focus();
+            const titleInput = document.getElementById('project-title');
+            if (titleInput) titleInput.focus();
         }
     };
 
     const closeModal = () => {
-        modal.classList.remove('active');
-        document.getElementById('form-add-project').reset();
+        if (modal) {
+            modal.classList.remove('active');
+            const projForm = document.getElementById('form-add-project');
+            if (projForm) projForm.reset();
+        }
     };
 
-    if (btnAdd) btnAdd.addEventListener('click', openModal);
-
+    if (btnAdd) btnAdd.onclick = openModal;
     [btnClose, btnCancel, btnCancelAr].forEach(btn => {
-        if (btn) btn.addEventListener('click', closeModal);
+        if (btn) btn.onclick = closeModal;
     });
 
-    if (modal) {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-    }
-
-    // Save Project to Supabase
     const handleSave = async (e) => {
         e.preventDefault();
-        
         const title = document.getElementById('project-title').value;
         const desc = document.getElementById('project-desc').value;
         const budget = parseFloat(document.getElementById('project-budget').value);
@@ -200,24 +184,44 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // --- Optimistic UI: add card immediately ---
+        const tempProject = {
+            id: 'temp-' + Date.now(),
+            title,
+            description: desc,
+            budget_total: budget,
+            budget_collected: 0,
+            status: 'Planifié',
+            created_at: new Date().toISOString()
+        };
+        const grid = document.querySelector('.projects-grid');
+        if (grid) {
+            const card = createProjectCard(tempProject);
+            grid.prepend(card);
+            if (window.lucide) lucide.createIcons();
+        }
+        closeModal();
+
+        // --- Background: persist to Supabase ---
         const { error } = await window.supabaseClient
             .from('repair_projects')
             .insert([{ title, description: desc, budget_total: budget, status: 'Planifié' }]);
 
         if (error) {
             alert('Error: ' + error.message);
-            return;
         }
-
-        fetchProjects(); // Refresh
-        closeModal();
+        fetchProjects();
     };
 
-    // Initial fetch
+    if (btnSave) btnSave.onclick = handleSave;
+    if (btnSaveAr) btnSaveAr.onclick = handleSave;
+
     fetchProjects();
+};
 
-    [btnSave, btnSaveAr].forEach(btn => {
-        if (btn) btn.addEventListener('click', handleSave);
-    });
-
+document.addEventListener('DOMContentLoaded', window.initRepairs);
+document.addEventListener('spa:pageLoaded', () => {
+    if (window.location.pathname.includes('repairs.html')) {
+        window.initRepairs();
+    }
 });
